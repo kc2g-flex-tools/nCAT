@@ -56,7 +56,7 @@ func (s *HamlibServer) Run() {
 		s.Lock()
 		s.clients = append(s.clients, conn)
 		s.Unlock()
-		s.handleClient(conn)
+		go s.handleClient(conn)
 	}
 out:
 	return
