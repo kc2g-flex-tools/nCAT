@@ -1,0 +1,6 @@
+github.com/arodland/flexclient v0.0.0-20200326161722-e53331342ce3 h1:oO1ytxliYpIA9R/mVhYxd1V0grqIp9Pg+MyJmBkhRZM=
+github.com/arodland/flexclient v0.0.0-20200326161722-e53331342ce3/go.mod h1:TJsk9/vJ3IIo9h9CTe0qWH4wx/iY/Jr1bkEzfyEsoYo=
+github.com/arodland/flexclient v0.0.0-20200326173658-1204deca036a h1:yj0VwPgGS4ZDPYYvkqG0CJhnO5Es2CVUUwb2qawjMyY=
+github.com/arodland/flexclient v0.0.0-20200326173658-1204deca036a/go.mod h1:TJsk9/vJ3IIo9h9CTe0qWH4wx/iY/Jr1bkEzfyEsoYo=
+github.com/krippendorf/flexlib-go v0.0.0-20190915173206-0615603c3e03 h1:Ms006cLD8bjmWhelibnwBZzKMg4rxmASRSf04ymxALc=
+github.com/krippendorf/flexlib-go v0.0.0-20190915173206-0615603c3e03/go.mod h1:2DEEUE+BgOsEbCz8RWpWbe3OyT6wn7xctzMyrxa6op8=
