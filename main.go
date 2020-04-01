@@ -27,11 +27,13 @@ func init() {
 	flag.StringVar(&cfg.Listen, "listen", ":4532", "hamlib listen [address]:port")
 }
 
+var StateLock sync.RWMutex
 var fc *flexclient.FlexClient
 var hamlib *HamlibServer
 var ClientID string
 var ClientUUID string
 var SliceIdx string
+var SliceState flexclient.Object
 
 func createClient() {
 	fmt.Println("Registering client")
@@ -77,6 +79,7 @@ func findSlice() {
 	for upd := range slices {
 		if upd.CurrentState["index_letter"] == cfg.Slice && upd.CurrentState["client_handle"] == ClientID {
 			SliceIdx = strings.TrimPrefix(upd.Object, "slice ")
+			SliceState = upd.CurrentState
 			break
 		}
 	}
@@ -123,6 +126,17 @@ func main() {
 		bindClient()
 	}
 	findSlice()
+
+	go func() {
+		updates := make(chan flexclient.StateUpdate, 10)
+		sub := fc.Subscribe(flexclient.Subscription{"slice ", updates})
+		for upd := range updates {
+			if upd.Object == "slice "+SliceIdx {
+				SliceState = upd.CurrentState
+			}
+		}
+		fc.Unsubscribe(sub)
+	}()
 
 	RegisterHandlers()
 	hamlib.Run()

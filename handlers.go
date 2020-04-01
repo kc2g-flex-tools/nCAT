@@ -54,7 +54,7 @@ func RegisterHandlers() {
 0
 0
 0
-0
+0x40000000
 0x40000020
 0x20
 0
@@ -78,18 +78,18 @@ func RegisterHandlers() {
 		}
 	})
 	hamlib.AddHandler("m", func(_ []string) string {
-		slice, ok := fc.GetObject("slice " + SliceIdx)
-		if !ok {
-			return "ERR\n0\n"
-		}
-
-		translated, ok := modesFromFlex[slice["mode"]]
+		StateLock.RLock()
+		defer StateLock.RUnlock()
+		translated, ok := modesFromFlex[SliceState["mode"]]
 		if !ok {
 			return "ERR\n0\n"
 		}
 		return translated + "\n3000\n"
 	})
 	hamlib.AddHandler("M", func(args []string) string {
+		StateLock.Lock()
+		defer StateLock.Unlock()
+
 		if len(args) != 2 {
 			return "RPRT 1\n"
 		}
@@ -108,20 +108,23 @@ func RegisterHandlers() {
 		}
 
 		cmd := fmt.Sprintf("slice set %s mode=%s", SliceIdx, mode)
+
+		var lo, hi int
 		if width != 0 {
-			lo := 1500 - (width / 2)
-			hi := 1500 + (width / 2)
+			lo = 1500 - (width / 2)
+			hi = 1500 + (width / 2)
 
 			cmd += fmt.Sprintf(" filter_lo=%d filter_hi=%d", lo, hi)
 		}
 
 		res := fc.SendAndWait(cmd)
 
-		// Refresh state. This is stupid.
-		fc.SendAndWait("unsub slice all")
-		fc.SendAndWait("sub slice all")
-
 		if res.Error == 0 {
+			SliceState["mode"] = mode
+			if width != 0 {
+				SliceState["filter_lo"] = fmt.Sprintf("%d", lo)
+				SliceState["filter_hi"] = fmt.Sprintf("%d", hi)
+			}
 			return "RPRT 0\n"
 		} else {
 			fmt.Printf("%#v\n", res)
@@ -129,17 +132,19 @@ func RegisterHandlers() {
 		}
 	})
 	hamlib.AddHandler("f", func(_ []string) string {
-		slice, ok := fc.GetObject("slice " + SliceIdx)
-		if !ok {
-			return "ERR\n"
-		}
-		freq, err := strconv.ParseFloat(slice["RF_frequency"], 64)
+		StateLock.RLock()
+		defer StateLock.RUnlock()
+
+		freq, err := strconv.ParseFloat(SliceState["RF_frequency"], 64)
 		if err != nil {
 			return "ERR\n"
 		}
 		return fmt.Sprintf("%f\n", freq*1e6)
 	})
 	hamlib.AddHandler("F", func(args []string) string {
+		StateLock.Lock()
+		defer StateLock.Unlock()
+
 		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
@@ -151,15 +156,40 @@ func RegisterHandlers() {
 		cmd := fmt.Sprintf("slice t %s %.6f", SliceIdx, freq/1e6)
 		res := fc.SendAndWait(cmd)
 
-		// Refresh state. This is stupid.
-		fc.SendAndWait("unsub slice all")
-		fc.SendAndWait("sub slice all")
-
 		if res.Error == 0 {
+			SliceState["RF_frequency"] = fmt.Sprintf("%.6f", freq/1e6)
 			return "RPRT 0\n"
 		} else {
 			fmt.Printf("%#v\n", res)
 			return "RPRT 1\n"
 		}
+	})
+	hamlib.AddHandler("U", func(args []string) string {
+		StateLock.Lock()
+		defer StateLock.Unlock()
+
+		if len(args) == 2 && args[0] == "TUNER" {
+			res := fc.SendAndWait("transmit tune " + args[1])
+			if res.Error == 0 {
+				return "RPRT 0\n"
+			} else {
+				return "RPRT 1\n"
+			}
+		} else {
+			return "RPRT 1\n"
+		}
+	})
+	hamlib.AddHandler("T", func(args []string) string {
+		if len(args) == 1 {
+			tx := "1"
+			if args[0] == "0" {
+				tx = "0"
+			}
+			res := fc.SendAndWait("xmit " + tx)
+			if res.Error == 0 {
+				return "RPRT 0\n"
+			}
+		}
+		return "RPRT 1\n"
 	})
 }
