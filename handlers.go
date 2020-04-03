@@ -1,5 +1,7 @@
 package main
 
+import "github.com/arodland/flexclient"
+
 import (
 	"fmt"
 	"strconv"
@@ -78,18 +80,18 @@ func RegisterHandlers() {
 		}
 	})
 	hamlib.AddHandler("m", func(_ []string) string {
-		StateLock.RLock()
-		defer StateLock.RUnlock()
-		translated, ok := modesFromFlex[SliceState["mode"]]
+		slice, ok := fc.GetObject("slice " + SliceIdx)
+		if !ok {
+			return "ERR\n0\n"
+		}
+
+		translated, ok := modesFromFlex[slice["mode"]]
 		if !ok {
 			return "ERR\n0\n"
 		}
 		return translated + "\n3000\n"
 	})
 	hamlib.AddHandler("M", func(args []string) string {
-		StateLock.Lock()
-		defer StateLock.Unlock()
-
 		if len(args) != 2 {
 			return "RPRT 1\n"
 		}
@@ -107,24 +109,22 @@ func RegisterHandlers() {
 			width = 3000
 		}
 
-		cmd := fmt.Sprintf("slice set %s mode=%s", SliceIdx, mode)
+		var update flexclient.Object
+
+		update["mode"] = mode
 
 		var lo, hi int
 		if width != 0 {
 			lo = 1500 - (width / 2)
 			hi = 1500 + (width / 2)
 
-			cmd += fmt.Sprintf(" filter_lo=%d filter_hi=%d", lo, hi)
+			update["filter_lo"] = fmt.Sprintf("%d", lo)
+			update["filter_hi"] = fmt.Sprintf("%d", hi)
 		}
 
-		res := fc.SendAndWait(cmd)
+		res := fc.SliceSet(SliceIdx, update)
 
 		if res.Error == 0 {
-			SliceState["mode"] = mode
-			if width != 0 {
-				SliceState["filter_lo"] = fmt.Sprintf("%d", lo)
-				SliceState["filter_hi"] = fmt.Sprintf("%d", hi)
-			}
 			return "RPRT 0\n"
 		} else {
 			fmt.Printf("%#v\n", res)
@@ -132,19 +132,18 @@ func RegisterHandlers() {
 		}
 	})
 	hamlib.AddHandler("f", func(_ []string) string {
-		StateLock.RLock()
-		defer StateLock.RUnlock()
+		slice, ok := fc.GetObject("slice " + SliceIdx)
+		if !ok {
+			return "ERR\n"
+		}
 
-		freq, err := strconv.ParseFloat(SliceState["RF_frequency"], 64)
+		freq, err := strconv.ParseFloat(slice["RF_frequency"], 64)
 		if err != nil {
 			return "ERR\n"
 		}
 		return fmt.Sprintf("%f\n", freq*1e6)
 	})
 	hamlib.AddHandler("F", func(args []string) string {
-		StateLock.Lock()
-		defer StateLock.Unlock()
-
 		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
@@ -153,11 +152,9 @@ func RegisterHandlers() {
 			return "RPRT 1\n"
 		}
 
-		cmd := fmt.Sprintf("slice t %s %.6f", SliceIdx, freq/1e6)
-		res := fc.SendAndWait(cmd)
+		res := fc.SliceTune(SliceIdx, freq/1e6)
 
 		if res.Error == 0 {
-			SliceState["RF_frequency"] = fmt.Sprintf("%.6f", freq/1e6)
 			return "RPRT 0\n"
 		} else {
 			fmt.Printf("%#v\n", res)
@@ -165,9 +162,6 @@ func RegisterHandlers() {
 		}
 	})
 	hamlib.AddHandler("U", func(args []string) string {
-		StateLock.Lock()
-		defer StateLock.Unlock()
-
 		if len(args) == 2 && args[0] == "TUNER" {
 			res := fc.SendAndWait("transmit tune " + args[1])
 			if res.Error == 0 {

@@ -27,13 +27,11 @@ func init() {
 	flag.StringVar(&cfg.Listen, "listen", ":4532", "hamlib listen [address]:port")
 }
 
-var StateLock sync.RWMutex
 var fc *flexclient.FlexClient
 var hamlib *HamlibServer
 var ClientID string
 var ClientUUID string
 var SliceIdx string
-var SliceState flexclient.Object
 
 func createClient() {
 	fmt.Println("Registering client")
@@ -51,15 +49,22 @@ func createClient() {
 func bindClient() {
 	fmt.Println("Waiting for station:", cfg.Station)
 
-	clients := make(chan flexclient.StateUpdate, 10)
+	clients := make(chan flexclient.StateUpdate)
 	sub := fc.Subscribe(flexclient.Subscription{"client ", clients})
-	fc.SendAndWait("sub client all")
+	cmdResult := fc.SendNotify("sub client all")
 
-	for upd := range clients {
-		if upd.CurrentState["station"] == cfg.Station {
-			ClientID = strings.TrimPrefix(upd.Object, "client ")
-			ClientUUID = upd.CurrentState["client_id"]
-			break
+	var found, cmdComplete bool
+
+	for !(found && cmdComplete) {
+		select {
+		case upd := <-clients:
+			if upd.CurrentState["station"] == cfg.Station {
+				ClientID = strings.TrimPrefix(upd.Object, "client ")
+				ClientUUID = upd.CurrentState["client_id"]
+				found = true
+			}
+		case <-cmdResult:
+			cmdComplete = true
 		}
 	}
 
@@ -72,21 +77,26 @@ func bindClient() {
 
 func findSlice() {
 	fmt.Println("Looking for slice:", cfg.Slice)
-	slices := make(chan flexclient.StateUpdate, 10)
-	fc.Subscribe(flexclient.Subscription{"slice ", slices})
-	fc.SendAndWait("sub slice all")
+	slices := make(chan flexclient.StateUpdate)
+	sub := fc.Subscribe(flexclient.Subscription{"slice ", slices})
+	cmdResult := fc.SendNotify("sub slice all")
 
-	for upd := range slices {
-		if upd.CurrentState["index_letter"] == cfg.Slice && upd.CurrentState["client_handle"] == ClientID {
-			SliceIdx = strings.TrimPrefix(upd.Object, "slice ")
-			SliceState = upd.CurrentState
-			break
+	var found, cmdComplete bool
+
+	for !(found && cmdComplete) {
+		select {
+		case upd := <-slices:
+			if upd.CurrentState["index_letter"] == cfg.Slice && upd.CurrentState["client_handle"] == ClientID {
+				SliceIdx = strings.TrimPrefix(upd.Object, "slice ")
+				found = true
+			}
+		case <-cmdResult:
+			cmdComplete = true
 		}
 	}
 
-	// Don't unsub, we want all slice updates anyway
+	fc.Unsubscribe(sub)
 	fmt.Println("Found slice", SliceIdx)
-
 }
 
 func main() {
@@ -126,17 +136,6 @@ func main() {
 		bindClient()
 	}
 	findSlice()
-
-	go func() {
-		updates := make(chan flexclient.StateUpdate, 10)
-		sub := fc.Subscribe(flexclient.Subscription{"slice ", updates})
-		for upd := range updates {
-			if upd.Object == "slice "+SliceIdx {
-				SliceState = upd.CurrentState
-			}
-		}
-		fc.Unsubscribe(sub)
-	}()
 
 	RegisterHandlers()
 	hamlib.Run()
