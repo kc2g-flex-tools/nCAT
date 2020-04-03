@@ -9,20 +9,26 @@ import (
 
 var modesToFlex = map[string]string{
 	"AM":     "AM",
+	"AMS":    "SAM",
 	"USB":    "USB",
 	"LSB":    "LSB",
 	"CW":     "CW",
 	"PKTUSB": "DIGU",
 	"PKTLSB": "DIGL",
+	"FM":     "FM",
+	"PKTFM":  "DFM",
 }
 
 var modesFromFlex = map[string]string{
 	"AM":   "AM",
+	"SAM":  "AMS",
 	"USB":  "USB",
 	"LSB":  "LSB",
 	"CW":   "CW",
 	"DIGU": "PKTUSB",
 	"DIGL": "PKTLSB",
+	"FM":   "FM",
+	"DFM":  "PKTFM",
 }
 
 func RegisterHandlers() {
