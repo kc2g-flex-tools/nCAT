@@ -169,15 +169,26 @@ func RegisterHandlers() {
 	})
 	hamlib.AddHandler("U", func(args []string) string {
 		if len(args) == 2 && args[0] == "TUNER" {
-			res := fc.SendAndWait("transmit tune " + args[1])
+			res := fc.TransmitTune(args[1])
 			if res.Error == 0 {
 				return "RPRT 0\n"
-			} else {
-				return "RPRT 1\n"
 			}
-		} else {
+		}
+		return "RPRT 1\n"
+	})
+	hamlib.AddHandler("u", func(args []string) string {
+		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
+
+		if args[0] == "TUNER" {
+			xmit, ok := fc.GetObject("transmit")
+			if !ok {
+				return "RPRT 1\n"
+			}
+			return xmit["tune"] + "\n"
+		}
+		return "RPRT 1\n"
 	})
 	hamlib.AddHandler("T", func(args []string) string {
 		if len(args) == 1 {
@@ -192,4 +203,49 @@ func RegisterHandlers() {
 		}
 		return "RPRT 1\n"
 	})
+	hamlib.AddHandler("t", func(_ []string) string {
+		interlock, ok := fc.GetObject("interlock")
+		if !ok {
+			return "RPRT 1\n"
+		}
+		if interlock["state"] == "TRANSMITTING" {
+			return "1\n"
+		} else {
+			return "0\n"
+		}
+	})
+	hamlib.AddHandler("L", func(args []string) string {
+		if len(args) == 2 && args[0] == "RFPOWER" {
+			power, err := strconv.ParseFloat(args[1], 64)
+			if err != nil {
+				return "RPRT 1\n"
+			}
+			power *= 100
+			res := fc.TransmitSet(flexclient.Object{"rfpower": fmt.Sprintf("%.0f", power)})
+			if res.Error == 0 {
+				return "RPRT 0\n"
+			}
+		}
+		return "RPRT 1\n"
+	})
+	hamlib.AddHandler("l", func(args []string) string {
+		if len(args) != 1 {
+			return "RPRT 1\n"
+		}
+
+		if args[0] == "RFPOWER" {
+			xmit, ok := fc.GetObject("transmit")
+			if !ok {
+				return "RPRT 1\n"
+			}
+			power, err := strconv.ParseFloat(xmit["rfpower"], 64)
+			if err != nil {
+				return "RPRT 1\n"
+			}
+			power /= 100
+			return fmt.Sprintf("%.3f\n", power)
+		}
+		return "RPRT 1\n"
+	})
+
 }

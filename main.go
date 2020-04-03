@@ -137,6 +137,9 @@ func main() {
 	}
 	findSlice()
 
+	fc.SendAndWait("sub radio all")
+	fc.SendAndWait("sub tx all")
+
 	RegisterHandlers()
 	hamlib.Run()
 
