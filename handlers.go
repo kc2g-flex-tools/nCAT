@@ -127,7 +127,7 @@ func RegisterHandlers() {
 			width = 3000
 		}
 
-		var update flexclient.Object
+		update := flexclient.Object{}
 
 		update["mode"] = mode
 
