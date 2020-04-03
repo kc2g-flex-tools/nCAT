@@ -33,41 +33,41 @@ var modesFromFlex = map[string]string{
 
 func RegisterHandlers() {
 	hamlib.AddHandler(`\dump_state`, func(_ []string) string {
-		return `0
-2
-1
-0.000000 10000000000.000000 0xef -1 -1 0x1 0x0
-0 0 0 0 0 0 0
-0 0 0 0 0 0 0
-0xef 1
-0xef 0
-0 0
-0x82 500
-0x82 200
-0x82 2000
-0x21 10000
-0x21 5000
-0x21 20000
-0x0c 2700
-0x0c 1400
-0x0c 3900
-0x40 160000
-0x40 120000
-0x40 200000
-0 0
-0
-0
-0
-0
-0
-0
-0
-0x40000000
-0x40000020
-0x20
-0
-0
-`
+		return "0\n" + // protocol version
+			"2\n" + // hamlib model
+			"2\n" + // region
+			"30000.000000 54000000.000000 0xe2f -1 -1 0x1 0x0\n" + // RX: 30kHz - 54MHz, AM|CW|USB|LSB|FM|AMS|PKTUSB|PKTLSB
+			"0 0 0 0 0 0 0\n" + // end of RX range list
+			"100000.000000 54000000.000000 0xe2f 1000 100000 0x1 0x0\n" + // TX: 100kHz - 54MHz, 1-100 watts, AM|CW|USB|LSB|FM|AMS|PKTUSB|PKTLSB
+			"0 0 0 0 0 0 0\n" + // end of TX range list
+			"0xe2f 1\n" +
+			"0xe2f 0\n" +
+			"0 0\n" + // end of tuning steps
+			"0x02 500\n" + // CW normal
+			"0x02 200\n" + // CW narrow
+			"0x02 2000\n" + // CW wide
+			"0x221 10000\n" + // AM|FM|AMS normal
+			"0x221 5000\n" + // AM|FM|AMS narrow
+			"0x221 20000\n" + // AM|FM|AMS wide
+			"0x0c 2700\n" + // SSB normal
+			"0x0c 1400\n" + // SSB narrow
+			"0x0c 3900\n" + // SSB wide
+			"0xc00 3000\n" + // digi normal
+			"0xc00 1500\n" + // digi narrow
+			"0xc00 4000\n" + // digi wide
+			"0 0\n" + // end of filter widths
+			"0\n" + // max rit
+			"0\n" + // max xit
+			"0\n" + // max if_shift
+			"0\n" + // no announce capabilities
+			"0 8 16 24 32\n" + // preamp
+			"0 8\n" + // attenuator
+			"0x48400833be\n" + // func get: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
+			"0x48400833be\n" + // func set: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
+			"0x600023110f\n" + // level get: PREAMP|ATT|VOXDELAY|NR|RFPOWER|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB (TODO: use metering protocol to add SWR|ALC|RFPOWER_METER|COMP_METER)
+			"0x600023110f\n" + // level set: PREAMP|ATT|VOXDELAY|NR|RFPOWER|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
+			"0\n" + // parm get: none
+			"0\n" // parm set: none
 	})
 	hamlib.AddHandler("v", func(_ []string) string {
 		return "VFOA\n"
