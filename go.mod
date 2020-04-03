@@ -1,4 +1,4 @@
-module github.com/arodland/hamlib-flex
+module github.com/arodland/nCAT
 
 go 1.13
 
