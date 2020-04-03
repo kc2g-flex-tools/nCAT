@@ -103,7 +103,7 @@ func main() {
 	flag.Parse()
 
 	var err error
-	fc, err = flexclient.NewFlexClient(cfg.RadioIP + ":4992")
+	fc, err = flexclient.NewFlexClient(cfg.RadioIP)
 	if err != nil {
 		panic(err)
 	}
