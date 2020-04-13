@@ -84,7 +84,7 @@ func RegisterHandlers() {
 	}, `\dump_state`)
 	hamlib.AddHandler(func(_ []string) string {
 		return "VFOA\n"
-	}, "v")
+	}, "v", `\get_vfo`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
@@ -97,7 +97,7 @@ func RegisterHandlers() {
 		} else {
 			return "RPRT 1\n"
 		}
-	}, "V")
+	}, "V", `\set_vfo`)
 	hamlib.AddHandler(func(_ []string) string {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
 		if !ok {
@@ -109,7 +109,7 @@ func RegisterHandlers() {
 			return "ERR\n0\n"
 		}
 		return translated + "\n3000\n"
-	}, "m")
+	}, "m", `\get_mode`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 2 {
 			return "RPRT 1\n"
@@ -149,7 +149,7 @@ func RegisterHandlers() {
 			fmt.Printf("%#v\n", res)
 			return "RPRT 1\n"
 		}
-	}, "M")
+	}, "M", `\set_mode`)
 	hamlib.AddHandler(func(_ []string) string {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
 		if !ok {
@@ -161,7 +161,7 @@ func RegisterHandlers() {
 			return "ERR\n"
 		}
 		return fmt.Sprintf("%d\n", int64(math.Round(freq*1e6)))
-	}, "f")
+	}, "f", `\get_freq`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
@@ -179,7 +179,7 @@ func RegisterHandlers() {
 			fmt.Printf("%#v\n", res)
 			return "RPRT 1\n"
 		}
-	}, "F")
+	}, "F", `\set_freq`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) == 2 && args[0] == "TUNER" {
 			res := fc.TransmitTune(args[1])
@@ -188,7 +188,7 @@ func RegisterHandlers() {
 			}
 		}
 		return "RPRT 1\n"
-	}, "U")
+	}, "U", `\set_func`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
@@ -202,7 +202,7 @@ func RegisterHandlers() {
 			return xmit["tune"] + "\n"
 		}
 		return "RPRT 1\n"
-	}, "u")
+	}, "u", `\get_func`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) == 1 {
 			tx := "1"
@@ -215,7 +215,7 @@ func RegisterHandlers() {
 			}
 		}
 		return "RPRT 1\n"
-	}, "T")
+	}, "T", `\set_ptt`)
 	hamlib.AddHandler(func(_ []string) string {
 		interlock, ok := fc.GetObject("interlock")
 		if !ok {
@@ -226,7 +226,7 @@ func RegisterHandlers() {
 		} else {
 			return "0\n"
 		}
-	}, "t")
+	}, "t", `\get_ptt`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) == 2 && args[0] == "RFPOWER" {
 			power, err := strconv.ParseFloat(args[1], 64)
@@ -240,7 +240,7 @@ func RegisterHandlers() {
 			}
 		}
 		return "RPRT 1\n"
-	}, "L")
+	}, "L", `\set_level`)
 	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
@@ -259,5 +259,5 @@ func RegisterHandlers() {
 			return fmt.Sprintf("%.3f\n", power)
 		}
 		return "RPRT 1\n"
-	}, "l")
+	}, "l", `\get_level`)
 }
