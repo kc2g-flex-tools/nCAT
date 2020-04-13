@@ -33,7 +33,7 @@ var modesFromFlex = map[string]string{
 }
 
 func RegisterHandlers() {
-	hamlib.AddHandler(`\dump_state`, func(_ []string) string {
+	hamlib.AddHandler(func(_ []string) string {
 		return "0\n" + // protocol version
 			"2\n" + // hamlib model
 			"2\n" + // region
@@ -81,11 +81,11 @@ func RegisterHandlers() {
 			"0x600023710f\n" + // level set: PREAMP|ATT|VOXDELAY|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
 			"0\n" + // parm get: none
 			"0\n" // parm set: none
-	})
-	hamlib.AddHandler("v", func(_ []string) string {
+	}, `\dump_state`)
+	hamlib.AddHandler(func(_ []string) string {
 		return "VFOA\n"
-	})
-	hamlib.AddHandler("V", func(args []string) string {
+	}, "v")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
@@ -97,8 +97,8 @@ func RegisterHandlers() {
 		} else {
 			return "RPRT 1\n"
 		}
-	})
-	hamlib.AddHandler("m", func(_ []string) string {
+	}, "V")
+	hamlib.AddHandler(func(_ []string) string {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
 		if !ok {
 			return "ERR\n0\n"
@@ -109,8 +109,8 @@ func RegisterHandlers() {
 			return "ERR\n0\n"
 		}
 		return translated + "\n3000\n"
-	})
-	hamlib.AddHandler("M", func(args []string) string {
+	}, "m")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 2 {
 			return "RPRT 1\n"
 		}
@@ -149,8 +149,8 @@ func RegisterHandlers() {
 			fmt.Printf("%#v\n", res)
 			return "RPRT 1\n"
 		}
-	})
-	hamlib.AddHandler("f", func(_ []string) string {
+	}, "M")
+	hamlib.AddHandler(func(_ []string) string {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
 		if !ok {
 			return "ERR\n"
@@ -161,8 +161,8 @@ func RegisterHandlers() {
 			return "ERR\n"
 		}
 		return fmt.Sprintf("%d\n", int64(math.Round(freq*1e6)))
-	})
-	hamlib.AddHandler("F", func(args []string) string {
+	}, "f")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
@@ -179,8 +179,8 @@ func RegisterHandlers() {
 			fmt.Printf("%#v\n", res)
 			return "RPRT 1\n"
 		}
-	})
-	hamlib.AddHandler("U", func(args []string) string {
+	}, "F")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) == 2 && args[0] == "TUNER" {
 			res := fc.TransmitTune(args[1])
 			if res.Error == 0 {
@@ -188,8 +188,8 @@ func RegisterHandlers() {
 			}
 		}
 		return "RPRT 1\n"
-	})
-	hamlib.AddHandler("u", func(args []string) string {
+	}, "U")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
@@ -202,8 +202,8 @@ func RegisterHandlers() {
 			return xmit["tune"] + "\n"
 		}
 		return "RPRT 1\n"
-	})
-	hamlib.AddHandler("T", func(args []string) string {
+	}, "u")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) == 1 {
 			tx := "1"
 			if args[0] == "0" {
@@ -215,8 +215,8 @@ func RegisterHandlers() {
 			}
 		}
 		return "RPRT 1\n"
-	})
-	hamlib.AddHandler("t", func(_ []string) string {
+	}, "T")
+	hamlib.AddHandler(func(_ []string) string {
 		interlock, ok := fc.GetObject("interlock")
 		if !ok {
 			return "RPRT 1\n"
@@ -226,8 +226,8 @@ func RegisterHandlers() {
 		} else {
 			return "0\n"
 		}
-	})
-	hamlib.AddHandler("L", func(args []string) string {
+	}, "t")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) == 2 && args[0] == "RFPOWER" {
 			power, err := strconv.ParseFloat(args[1], 64)
 			if err != nil {
@@ -240,8 +240,8 @@ func RegisterHandlers() {
 			}
 		}
 		return "RPRT 1\n"
-	})
-	hamlib.AddHandler("l", func(args []string) string {
+	}, "L")
+	hamlib.AddHandler(func(args []string) string {
 		if len(args) != 1 {
 			return "RPRT 1\n"
 		}
@@ -259,6 +259,5 @@ func RegisterHandlers() {
 			return fmt.Sprintf("%.3f\n", power)
 		}
 		return "RPRT 1\n"
-	})
-
+	}, "l")
 }

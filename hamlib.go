@@ -115,8 +115,10 @@ func (s *HamlibServer) handleCmd(conn net.Conn, line string) bool {
 	return false
 }
 
-func (s *HamlibServer) AddHandler(cmd string, handler Handler) {
+func (s *HamlibServer) AddHandler(handler Handler, names ...string) {
 	s.Lock()
 	defer s.Unlock()
-	s.handlers[cmd] = handler
+	for _, name := range names {
+		s.handlers[name] = handler
+	}
 }
