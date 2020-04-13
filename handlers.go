@@ -1,10 +1,11 @@
 package main
 
-import "github.com/arodland/flexclient"
-
 import (
 	"fmt"
+	"math"
 	"strconv"
+
+	"github.com/arodland/flexclient"
 )
 
 var modesToFlex = map[string]string{
@@ -159,7 +160,7 @@ func RegisterHandlers() {
 		if err != nil {
 			return "ERR\n"
 		}
-		return fmt.Sprintf("%f\n", freq*1e6)
+		return fmt.Sprintf("%d\n", int64(math.Round(freq*1e6)))
 	})
 	hamlib.AddHandler("F", func(args []string) string {
 		if len(args) != 1 {
