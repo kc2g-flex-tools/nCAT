@@ -77,8 +77,8 @@ func RegisterHandlers() {
 			"0 8\n" + // attenuator
 			"0x48400833be\n" + // func get: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
 			"0x48400833be\n" + // func set: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
-			"0x600023710f\n" + // level get: PREAMP|ATT|VOXDELAY|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB (TODO: use metering protocol to add SWR|ALC|RFPOWER_METER|COMP_METER)
-			"0x600023710f\n" + // level set: PREAMP|ATT|VOXDELAY|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
+			"0x600023711f\n" + // level get: PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB (TODO: use metering protocol to add SWR|ALC|RFPOWER_METER|COMP_METER)
+			"0x600023711f\n" + // level set: PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
 			"0\n" + // parm get: none
 			"0\n" // parm set: none
 	}, `\dump_state`)
@@ -238,6 +238,16 @@ func RegisterHandlers() {
 			if res.Error == 0 {
 				return "RPRT 0\n"
 			}
+		} else if len(args) == 2 && args[0] == "RF" {
+			agct, err := strconv.ParseFloat(args[1], 64)
+			if err != nil {
+				return "RPRT 1\n"
+			}
+			agct *= 100
+			res := fc.SliceSet(SliceIdx, flexclient.Object{"agc_threshold": fmt.Sprintf("%.0f", agct)})
+			if res.Error == 0 {
+				return "RPRT 0\n"
+			}
 		}
 		return "RPRT 1\n"
 	}, "L", `\set_level`)
@@ -257,6 +267,17 @@ func RegisterHandlers() {
 			}
 			power /= 100
 			return fmt.Sprintf("%.3f\n", power)
+		} else if args[0] == "RF" {
+			slice, ok := fc.GetObject("slice " + SliceIdx)
+			if !ok {
+				return "RPRT 1\n"
+			}
+			agct, err := strconv.ParseFloat(slice["agc_threshold"], 64)
+			if err != nil {
+				return "RPRT 1\n"
+			}
+			agct /= 100
+			return fmt.Sprintf("%.3f\n", agct)
 		}
 		return "RPRT 1\n"
 	}, "l", `\get_level`)
