@@ -124,31 +124,40 @@ func RegisterHandlers() {
 			return "RPRT 1\n"
 		}
 
-		if width < 0 || width > 3000 {
+		res := fc.SliceSet(SliceIdx, flexclient.Object{"mode": mode})
+		if res.Error != 0 {
+			return "RPRT 1\n"
+		}
+
+		if width < 0 {
 			width = 3000
 		}
 
-		update := flexclient.Object{}
-
-		update["mode"] = mode
-
-		var lo, hi int
 		if width != 0 {
-			lo = 1500 - (width / 2)
-			hi = 1500 + (width / 2)
+			var lo, hi int
 
-			update["filter_lo"] = fmt.Sprintf("%d", lo)
-			update["filter_hi"] = fmt.Sprintf("%d", hi)
+			if mode == "AM" || mode == "SAM" || mode == "FM" || mode == "DFM" {
+				lo = -width
+				hi = width
+			} else {
+				if width < 3000 {
+					lo = 1500 - (width / 2)
+					hi = 1500 + (width / 2)
+				} else {
+					lo = 0
+					hi = width
+				}
+				if mode == "LSB" || mode == "DIGL" {
+					lo, hi = -hi, -lo
+				}
+			}
+			res := fc.SliceSetFilter(SliceIdx, lo, hi)
+			if res.Error != 0 {
+				return "RPRT 1\n"
+			}
 		}
 
-		res := fc.SliceSet(SliceIdx, update)
-
-		if res.Error == 0 {
-			return "RPRT 0\n"
-		} else {
-			fmt.Printf("%#v\n", res)
-			return "RPRT 1\n"
-		}
+		return "RPRT 0\n"
 	}, "M", `\set_mode`)
 	hamlib.AddHandler(func(_ []string) string {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
