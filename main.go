@@ -12,11 +12,12 @@ import (
 )
 
 var cfg struct {
-	RadioIP  string
-	Station  string
-	Slice    string
-	Headless bool
-	Listen   string
+	RadioIP          string
+	Station          string
+	Slice            string
+	Headless         bool
+	SliceCreateParms string
+	Listen           string
 }
 
 func init() {
@@ -40,10 +41,12 @@ func createClient() {
 		panic(res)
 	}
 	ClientUUID = res.Message
-	ClientID = fc.ClientID()
+	ClientID = "0x" + fc.ClientID()
 
 	fc.SendAndWait("client program Hamlib-Flex")
 	fc.SendAndWait("client station " + cfg.Station)
+
+	fmt.Println("Client Handle ", ClientID)
 }
 
 func bindClient() {
