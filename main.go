@@ -29,7 +29,7 @@ func init() {
 }
 
 var fc *flexclient.FlexClient
-var hamlib *HamlibServer
+var hamlib *HamlibServer = NewHamlibServer()
 var ClientID string
 var ClientUUID string
 var SliceIdx string
@@ -119,7 +119,7 @@ func main() {
 		wg.Done()
 	}()
 
-	hamlib, err = NewHamlibServer(cfg.Listen)
+	err = hamlib.Listen(cfg.Listen)
 	if err != nil {
 		panic(err)
 	}
@@ -143,7 +143,6 @@ func main() {
 	fc.SendAndWait("sub radio all")
 	fc.SendAndWait("sub tx all")
 
-	RegisterHandlers()
 	hamlib.Run()
 
 	wg.Wait()
