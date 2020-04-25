@@ -253,7 +253,21 @@ func RegisterHandlers() {
 				return "RPRT 1\n"
 			}
 			agct *= 100
-			res := fc.SliceSet(SliceIdx, flexclient.Object{"agc_threshold": fmt.Sprintf("%.0f", agct)})
+
+			slice, ok := fc.GetObject("slice " + SliceIdx)
+			if !ok {
+				return "RPRT 1\n"
+			}
+
+			obj := flexclient.Object{}
+
+			if slice["agc_mode"] == "off" {
+				obj["agc_off_level"] = fmt.Sprintf("%.0f", agct)
+			} else {
+				obj["agc_threshold"] = fmt.Sprintf("%.0f", agct)
+			}
+
+			res := fc.SliceSet(SliceIdx, obj)
 			if res.Error == 0 {
 				return "RPRT 0\n"
 			}
@@ -281,7 +295,12 @@ func RegisterHandlers() {
 			if !ok {
 				return "RPRT 1\n"
 			}
-			agct, err := strconv.ParseFloat(slice["agc_threshold"], 64)
+			agcKey := "agc_threshold"
+			if slice["agc_mode"] == "off" {
+				agcKey = "agc_off_level"
+			}
+
+			agct, err := strconv.ParseFloat(slice[agcKey], 64)
 			if err != nil {
 				return "RPRT 1\n"
 			}
