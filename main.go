@@ -21,7 +21,7 @@ var cfg struct {
 }
 
 func init() {
-	flag.StringVar(&cfg.RadioIP, "radio", "192.168.1.67", "radio IP address")
+	flag.StringVar(&cfg.RadioIP, "radio", ":discover:", "radio IP address or discovery spec")
 	flag.StringVar(&cfg.Station, "station", "Flex", "station name to bind to or create")
 	flag.StringVar(&cfg.Slice, "slice", "A", "slice letter to control")
 	flag.BoolVar(&cfg.Headless, "headless", false, "run in headless mode")
