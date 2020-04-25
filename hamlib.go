@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 	"sync"
@@ -12,24 +13,108 @@ type HamlibServer struct {
 	sync.RWMutex
 	listener net.Listener
 	clients  []net.Conn
-	handlers map[string]Handler
+	handlers map[string]interface{}
 	exit     chan struct{}
 }
 
-type Handler func([]string) string
+type customError struct {
+	error
+	response string
+}
 
-func NewHamlibServer(listen string) (*HamlibServer, error) {
-	l, err := net.Listen("tcp", listen)
-	if err != nil {
-		return nil, fmt.Errorf("%w while listening on %s", err, listen)
+func CustomError(err error, response string) error {
+	return customError{
+		error:    err,
+		response: response,
+	}
+}
+
+type HandlerFunc func(Conn, []string) (string, error)
+
+type Handler struct {
+	cb          HandlerFunc
+	minArgs     *int
+	maxArgs     *int
+	allArgs     bool
+	errResponse *string
+}
+
+type Option interface {
+	apply(h *Handler)
+}
+
+type MinArgs int
+
+func (ma MinArgs) apply(h *Handler) {
+	x := int(ma)
+	h.minArgs = &x
+}
+
+type MaxArgs int
+
+func (ma MaxArgs) apply(h *Handler) {
+	x := int(ma)
+	h.maxArgs = &x
+}
+
+type Args int
+
+func (a Args) apply(h *Handler) {
+	x := int(a)
+	h.minArgs = &x
+	h.maxArgs = &x
+}
+
+type AllArgs bool
+
+func (aa AllArgs) apply(h *Handler) {
+	h.allArgs = bool(aa)
+}
+
+type ErrResponse string
+
+func (er ErrResponse) apply(h *Handler) {
+	x := string(er)
+	h.errResponse = &x
+}
+
+type names [][]string
+
+func NewHandler(cb HandlerFunc, opts ...Option) Handler {
+	h := Handler{
+		cb: cb,
 	}
 
+	for _, o := range opts {
+		o.apply(&h)
+	}
+
+	return h
+}
+
+func NewHamlibServer() *HamlibServer {
 	return &HamlibServer{
-		listener: l,
 		clients:  []net.Conn{},
-		handlers: map[string]Handler{},
+		handlers: map[string]interface{}{},
 		exit:     make(chan struct{}),
-	}, nil
+	}
+}
+
+var Success = "RPRT 0\n"
+var Error = "RPRT 1\n"
+
+type Conn struct {
+	net.Conn
+}
+
+func (s *HamlibServer) Listen(listen string) error {
+	l, err := net.Listen("tcp", listen)
+	if err != nil {
+		return fmt.Errorf("%w while listening on %s", err, listen)
+	}
+
+	s.listener = l
+	return nil
 }
 
 func (s *HamlibServer) Close() {
@@ -49,10 +134,14 @@ func (s *HamlibServer) Run() {
 	}()
 
 	for {
-		conn, err := s.listener.Accept()
+		netConn, err := s.listener.Accept()
 		if err != nil {
 			goto out
 		}
+		conn := Conn{
+			Conn: netConn,
+		}
+
 		s.Lock()
 		s.clients = append(s.clients, conn)
 		s.Unlock()
@@ -62,7 +151,7 @@ out:
 	return
 }
 
-func (s *HamlibServer) handleClient(conn net.Conn) {
+func (s *HamlibServer) handleClient(conn Conn) {
 	lines := bufio.NewScanner(conn)
 	for lines.Scan() {
 		exit := s.handleCmd(conn, lines.Text())
@@ -79,7 +168,7 @@ func (s *HamlibServer) handleClient(conn net.Conn) {
 	s.Unlock()
 }
 
-func (s *HamlibServer) handleCmd(conn net.Conn, line string) bool {
+func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 	if line == "" {
 		return false
 	}
@@ -98,27 +187,80 @@ func (s *HamlibServer) handleCmd(conn net.Conn, line string) bool {
 		}
 	}
 
-	parts := strings.Split(rest, " ")
-	fmt.Printf("%s %v\n", cmd, parts)
+	parts := []string{cmd}
+	if rest != "" {
+		parts = append(parts, strings.Split(rest, " ")...)
+	}
+	log.Println(parts)
 	s.RLock()
 	defer s.RUnlock()
 	if cmd == "q" {
 		return true
 	}
 
-	ret := "RPRT 1\n" // unknown command
-	handler, ok := s.handlers[cmd]
-	if ok {
-		ret = handler(parts)
+	ret := Error // unknown command
+	table := s.handlers
+	i := 0
+
+	for {
+		h := table[parts[i]]
+		switch handler := h.(type) {
+		case map[string]interface{}:
+			table = handler
+			i += 1
+			continue
+		case Handler:
+			var e error
+			var args []string
+			if handler.allArgs {
+				args = parts
+			} else {
+				args = parts[i+1:]
+			}
+
+			if handler.minArgs != nil && len(args) < *handler.minArgs {
+				e = fmt.Errorf("required at least %d args, got %d", *handler.minArgs, len(args))
+			} else if handler.maxArgs != nil && len(args) > *handler.maxArgs {
+				e = fmt.Errorf("required max %d args, got %d", *handler.maxArgs, len(args))
+			} else {
+				ret, e = handler.cb(conn, args)
+			}
+
+			if e != nil {
+				switch err := e.(type) {
+				case customError:
+					ret = err.response
+				default:
+					if handler.errResponse != nil {
+						ret = *handler.errResponse
+					}
+				}
+				log.Println("Handler returned error:", e)
+			}
+		case nil:
+			log.Println("No handler found for command", parts[:i])
+		default:
+			log.Printf("Found an unknown thing in the handler table: %T\n", handler)
+		}
+		break
 	}
 	conn.Write([]byte(ret))
 	return false
 }
 
-func (s *HamlibServer) AddHandler(handler Handler, names ...string) {
+func (s *HamlibServer) AddHandler(names names, handler Handler) {
 	s.Lock()
 	defer s.Unlock()
+
 	for _, name := range names {
-		s.handlers[name] = handler
+		table := s.handlers
+		for _, part := range name[:len(name)-1] {
+			if table[part] == nil {
+				table[part] = map[string]interface{}{}
+			}
+			table = table[part].(map[string]interface{})
+		}
+
+		table[name[len(name)-1]] = handler
 	}
 }
