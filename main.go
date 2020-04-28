@@ -18,6 +18,7 @@ var cfg struct {
 	Headless         bool
 	SliceCreateParms string
 	Listen           string
+	Profile          string
 }
 
 func init() {
@@ -26,6 +27,7 @@ func init() {
 	flag.StringVar(&cfg.Slice, "slice", "A", "slice letter to control")
 	flag.BoolVar(&cfg.Headless, "headless", false, "run in headless mode")
 	flag.StringVar(&cfg.Listen, "listen", ":4532", "hamlib listen [address]:port")
+	flag.StringVar(&cfg.Profile, "profile", "", "global profile to load on startup for -headless mode")
 }
 
 var fc *flexclient.FlexClient
@@ -47,6 +49,15 @@ func createClient() {
 	fc.SendAndWait("client station " + cfg.Station)
 
 	log.Println("Client Handle ", ClientID)
+
+	if cfg.Profile != "" {
+		res := fc.SendAndWait("profile global load " + cfg.Profile)
+		if res.Error != 0 {
+			log.Printf("Profile load failed: %08X (typo?)", res.Error)
+		} else {
+			log.Printf("Loaded profile %s", cfg.Profile)
+		}
+	}
 }
 
 func bindClient() {
@@ -104,6 +115,10 @@ func findSlice() {
 
 func main() {
 	flag.Parse()
+
+	if cfg.Profile != "" && !cfg.Headless {
+		log.Fatal("-profile doesn't make sense without -headless")
+	}
 
 	var err error
 	fc, err = flexclient.NewFlexClient(cfg.RadioIP)
