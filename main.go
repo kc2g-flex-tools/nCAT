@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -35,7 +35,7 @@ var ClientUUID string
 var SliceIdx string
 
 func createClient() {
-	fmt.Println("Registering client")
+	log.Println("Registering client")
 	res := fc.SendAndWait("client gui")
 	if res.Error != 0 {
 		panic(res)
@@ -46,11 +46,11 @@ func createClient() {
 	fc.SendAndWait("client program Hamlib-Flex")
 	fc.SendAndWait("client station " + cfg.Station)
 
-	fmt.Println("Client Handle ", ClientID)
+	log.Println("Client Handle ", ClientID)
 }
 
 func bindClient() {
-	fmt.Println("Waiting for station:", cfg.Station)
+	log.Println("Waiting for station:", cfg.Station)
 
 	clients := make(chan flexclient.StateUpdate)
 	sub := fc.Subscribe(flexclient.Subscription{"client ", clients})
@@ -73,13 +73,13 @@ func bindClient() {
 
 	fc.Unsubscribe(sub)
 
-	fmt.Println("Found client ID", ClientID, "UUID", ClientUUID)
+	log.Println("Found client ID", ClientID, "UUID", ClientUUID)
 
 	fc.SendAndWait("client bind client_id=" + ClientUUID)
 }
 
 func findSlice() {
-	fmt.Println("Looking for slice:", cfg.Slice)
+	log.Println("Looking for slice:", cfg.Slice)
 	slices := make(chan flexclient.StateUpdate)
 	sub := fc.Subscribe(flexclient.Subscription{"slice ", slices})
 	cmdResult := fc.SendNotify("sub slice all")
@@ -99,7 +99,7 @@ func findSlice() {
 	}
 
 	fc.Unsubscribe(sub)
-	fmt.Println("Found slice", SliceIdx)
+	log.Println("Found slice", SliceIdx)
 }
 
 func main() {
@@ -128,7 +128,7 @@ func main() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
 		_ = <-c
-		fmt.Println("Exit on SIGINT")
+		log.Println("Exit on SIGINT")
 		fc.Close()
 		hamlib.Close()
 	}()
