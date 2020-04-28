@@ -16,6 +16,8 @@ jobs:
     strategy:
       matrix:
         go: ['1.13', '1.14']
+        os: ['linux']
+        arch: ['amd64', 'arm']
         include:
           - go: '1.14'
             release: true
@@ -41,11 +43,15 @@ jobs:
 
     - name: Build
       run: go build -v .
+      env:
+        GOOS: ${{ matrix.os }}
+        GOARCH: ${{ matrix.arch }}
 
     - name: Upload to Release
-      uses: JasonEtco/upload-to-release@master
       if: github.event.release.id && matrix.release
-      with:
-        args: nCAT application/octet-stream
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        curl -f -sSL -X POST \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
+        -H "Content-Type: application/octet-stream" \
+        --upload-file nCAT \
+        "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${{github.event.release.id}}/assets?name=nCAT-${{matrix.os}}-${{matrix.arch}}"
