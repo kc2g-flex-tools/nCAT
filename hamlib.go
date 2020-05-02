@@ -238,7 +238,7 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 				log.Println("Handler returned error:", e)
 			}
 		case nil:
-			log.Println("No handler found for command", parts[:i])
+			log.Println("No handler found for command", parts[:i+1])
 		default:
 			log.Printf("Found an unknown thing in the handler table: %T\n", handler)
 		}
