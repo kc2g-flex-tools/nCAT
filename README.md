@@ -25,11 +25,25 @@ nCAT enables you to present a hamlib interface to your Flex radio so that any ha
 
 ## Getting Started
 
+### Connecting to an Existing GUI
+
+If you have a Maestro, an "M" model radio, or a copy of SmartSDR or another GUI running somewhere, and you want nCAT to control (and be controlled by) that session, find that client's "station" name, and run
+
+```
+./nCAT -station Whatever
+```
+
+This mode will be familiar to those who have used CAT for Windows.
+
+### Headless mode
+
+If you would like to create a new "headless" session, independent of any GUI client, run
+
 ```
 $ ./nCAT -headless
 ```
 
-This will setup a hamlib listening TCP/IP connection on port 4532.
+In either case, a hamlib net protocol (rigctld) server will start on TCP port 4532.
 
 ### Installation
 1. Download the latest binary using the Releases icon above or [Releases](https://github.com/kc2g-flex-tools/nCAT/releases)
