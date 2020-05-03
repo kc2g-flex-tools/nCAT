@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/arodland/flexclient"
+	"github.com/kc2g-flex-tools/flexclient"
 )
 
 var cfg struct {

@@ -1,5 +1,8 @@
-module github.com/arodland/nCAT
+module github.com/kc2g-flex-tools/nCAT
 
 go 1.13
 
-require github.com/arodland/flexclient v0.0.0-20200425170618-c0a9a1b746c8
+require (
+	github.com/kc2g-flex-tools/flexclient v0.0.0-20200503210605-5ef5b83e8f87
+	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3 // indirect
+)

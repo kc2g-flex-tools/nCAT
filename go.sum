@@ -1,6 +1,8 @@
-github.com/arodland/flexclient v0.0.0-20200425170618-c0a9a1b746c8 h1:xmTkAH/gQe7o9/8cOG0q9yNkEl+BURIsPvyjuoPTegA=
-github.com/arodland/flexclient v0.0.0-20200425170618-c0a9a1b746c8/go.mod h1:Dr1IsVCe2rU/bgzYHQf2FJPnbn7aU1ewl6kqQzXw6/w=
+github.com/kc2g-flex-tools/flexclient v0.0.0-20200503210605-5ef5b83e8f87 h1:LXxrJzhLVNsHrMUxSLbR5kptFTE8wsvfIbGMim9UZw0=
+github.com/kc2g-flex-tools/flexclient v0.0.0-20200503210605-5ef5b83e8f87/go.mod h1:xNkx45ZycxDy8K0IdJokHYP6ynECczBqSeemrm+xsyk=
 github.com/krippendorf/flexlib-go v0.0.0-20190915173206-0615603c3e03 h1:Ms006cLD8bjmWhelibnwBZzKMg4rxmASRSf04ymxALc=
 github.com/krippendorf/flexlib-go v0.0.0-20190915173206-0615603c3e03/go.mod h1:2DEEUE+BgOsEbCz8RWpWbe3OyT6wn7xctzMyrxa6op8=
 golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f h1:gWF768j/LaZugp8dyS4UwsslYCYz9XgFxvlgsn0n9H8=
 golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3 h1:5B6i6EAiSYyejWfvc5Rc9BbI3rzIsrrXfAQBWnYfn+w=
+golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=

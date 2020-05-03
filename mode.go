@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/arodland/flexclient"
+	"github.com/kc2g-flex-tools/flexclient"
 )
 
 func init() {
