@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/kc2g-flex-tools/flexclient"
+)
 
 func init() {
 	hamlib.AddHandler(
@@ -26,6 +30,8 @@ func get_ptt(_ Conn, _ []string) (string, error) {
 		return "", fmt.Errorf("couldn't get interlock")
 	}
 
+	// TODO: what should this return if a different slice is transmitting?
+
 	if interlock["state"] == "TRANSMITTING" {
 		return "1\n", nil
 	} else {
@@ -38,6 +44,22 @@ func set_ptt(_ Conn, args []string) (string, error) {
 	if args[0] == "0" {
 		tx = "0"
 	}
+
+	// If requesting PTT on, and the current slice isn't the TX slice,
+	// take over the TX flag.
+	if tx == "1" {
+		slice, ok := fc.GetObject("slice " + SliceIdx)
+		if !ok {
+			return "", fmt.Errorf("Couldn't get slice %s", SliceIdx)
+		}
+		if slice["tx"] != "1" {
+			res := fc.SliceSet(SliceIdx, flexclient.Object{"tx": "1"})
+			if res.Error != 0 {
+				return "", fmt.Errorf("slice set %08X", res.Error)
+			}
+		}
+	}
+
 	res := fc.SendAndWait("xmit " + tx)
 	if res.Error != 0 {
 		return "", fmt.Errorf("xmit %08X", res.Error)
