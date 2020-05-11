@@ -233,6 +233,8 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 				default:
 					if handler.errResponse != nil {
 						ret = *handler.errResponse
+					} else {
+						ret = Error
 					}
 				}
 				log.Println("Handler returned error:", e)
