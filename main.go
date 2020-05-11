@@ -20,6 +20,7 @@ var cfg struct {
 	SliceCreateParms string
 	Listen           string
 	Profile          string
+	LogLevel         string
 }
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 	flag.BoolVar(&cfg.Headless, "headless", false, "run in headless mode")
 	flag.StringVar(&cfg.Listen, "listen", ":4532", "hamlib listen [address]:port")
 	flag.StringVar(&cfg.Profile, "profile", "", "global profile to load on startup for -headless mode")
+	flag.StringVar(&cfg.LogLevel, "log-level", "info", "minimum level of messages to log to console")
 }
 
 var fc *flexclient.FlexClient
@@ -123,11 +125,17 @@ func main() {
 
 	flag.Parse()
 
+	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		log.Fatal().Str("level", cfg.LogLevel).Msg("Unknown log level")
+	}
+
+	zerolog.SetGlobalLevel(logLevel)
+
 	if cfg.Profile != "" && !cfg.Headless {
 		log.Fatal().Msg("-profile doesn't make sense without -headless")
 	}
 
-	var err error
 	fc, err = flexclient.NewFlexClient(cfg.RadioIP)
 	if err != nil {
 		panic(err)
