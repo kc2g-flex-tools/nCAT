@@ -3,10 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 type HamlibServer struct {
@@ -191,7 +192,7 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 	if rest != "" {
 		parts = append(parts, strings.Split(rest, " ")...)
 	}
-	log.Println(parts)
+	log.Debug().Strs("cmd", parts).Msg("")
 	s.RLock()
 	defer s.RUnlock()
 	if cmd == "q" {
@@ -237,12 +238,12 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 						ret = Error
 					}
 				}
-				log.Println("Handler returned error:", e)
+				log.Warn().Strs("cmd", parts[:i+1]).Err(e).Msg("Handler returned error")
 			}
 		case nil:
-			log.Println("No handler found for command", parts[:i+1])
+			log.Warn().Strs("cmd", parts[:i+1]).Msg("No handler found")
 		default:
-			log.Printf("Found an unknown thing in the handler table: %T\n", handler)
+			log.Warn().Strs("cmd", parts[:i+1]).Interface("handler", handler).Msg("Found an unknown thing in the handler table")
 		}
 		break
 	}

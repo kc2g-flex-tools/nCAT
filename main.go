@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"sync"
 
 	"github.com/kc2g-flex-tools/flexclient"
+	"github.com/rs/zerolog"
+	log "github.com/rs/zerolog/log"
 )
 
 var cfg struct {
@@ -37,7 +38,7 @@ var ClientUUID string
 var SliceIdx string
 
 func createClient() {
-	log.Println("Registering client")
+	log.Info().Msg("Registering client")
 	res := fc.SendAndWait("client gui")
 	if res.Error != 0 {
 		panic(res)
@@ -48,7 +49,7 @@ func createClient() {
 	fc.SendAndWait("client program Hamlib-Flex")
 	fc.SendAndWait("client station " + cfg.Station)
 
-	log.Println("Client Handle ", ClientID)
+	log.Info().Str("handle", ClientID).Msg("Got client handle")
 
 	if cfg.Profile != "" {
 		res := fc.SendAndWait("profile global load " + cfg.Profile)
@@ -61,7 +62,7 @@ func createClient() {
 }
 
 func bindClient() {
-	log.Println("Waiting for station:", cfg.Station)
+	log.Info().Str("station", cfg.Station).Msg("Waiting for station")
 
 	clients := make(chan flexclient.StateUpdate)
 	sub := fc.Subscribe(flexclient.Subscription{"client ", clients})
@@ -84,13 +85,13 @@ func bindClient() {
 
 	fc.Unsubscribe(sub)
 
-	log.Println("Found client ID", ClientID, "UUID", ClientUUID)
+	log.Info().Str("client_id", ClientID).Str("uuid", ClientUUID).Msg("Found client")
 
 	fc.SendAndWait("client bind client_id=" + ClientUUID)
 }
 
 func findSlice() {
-	log.Println("Looking for slice:", cfg.Slice)
+	log.Info().Str("slice_id", cfg.Slice).Msg("Looking for slice")
 	slices := make(chan flexclient.StateUpdate)
 	sub := fc.Subscribe(flexclient.Subscription{"slice ", slices})
 	cmdResult := fc.SendNotify("sub slice all")
@@ -110,14 +111,20 @@ func findSlice() {
 	}
 
 	fc.Unsubscribe(sub)
-	log.Println("Found slice", SliceIdx)
+	log.Info().Str("slice_idx", SliceIdx).Msg("Found slice")
 }
 
 func main() {
+	log.Logger = zerolog.New(
+		zerolog.ConsoleWriter{
+			Out: os.Stderr,
+		},
+	).With().Timestamp().Logger()
+
 	flag.Parse()
 
 	if cfg.Profile != "" && !cfg.Headless {
-		log.Fatal("-profile doesn't make sense without -headless")
+		log.Fatal().Msg("-profile doesn't make sense without -headless")
 	}
 
 	var err error
@@ -143,7 +150,7 @@ func main() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
 		_ = <-c
-		log.Println("Exit on SIGINT")
+		log.Info().Msg("Exit on SIGINT")
 		fc.Close()
 		hamlib.Close()
 	}()
