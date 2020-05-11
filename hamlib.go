@@ -238,7 +238,7 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 						ret = Error
 					}
 				}
-				log.Warn().Strs("cmd", parts[:i+1]).Err(e).Msg("Handler returned error")
+				log.Warn().Strs("cmd", parts).Err(e).Msg("Handler returned error")
 			}
 		case nil:
 			log.Warn().Strs("cmd", parts[:i+1]).Msg("No handler found")
