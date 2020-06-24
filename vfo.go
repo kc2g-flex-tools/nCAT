@@ -4,6 +4,13 @@ import "fmt"
 
 func init() {
 	hamlib.AddHandler(
+		names{{`\chk_vfo`}},
+		NewHandler(
+			chk_vfo,
+			Args(0),
+		),
+	)
+	hamlib.AddHandler(
 		names{{`v`}, {`\get_vfo`}},
 		NewHandler(
 			get_vfo,
@@ -17,6 +24,17 @@ func init() {
 			Args(1),
 		),
 	)
+	hamlib.AddHandler(
+		names{{`s`}, {`\get_split_vfo`}},
+		NewHandler(
+			get_split_vfo,
+			Args(0),
+		),
+	)
+}
+
+func chk_vfo(_ Conn, _ []string) (string, error) {
+	return "CHKVFO 0\n", nil
 }
 
 func get_vfo(_ Conn, _ []string) (string, error) {
@@ -31,4 +49,8 @@ func set_vfo(_ Conn, args []string) (string, error) {
 	} else {
 		return "", fmt.Errorf("No such VFO %s", args[0])
 	}
+}
+
+func get_split_vfo(_ Conn, _ []string) (string, error) {
+	return "0\nVFOA\n", nil
 }
