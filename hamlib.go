@@ -192,7 +192,7 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 	if rest != "" {
 		parts = append(parts, strings.Split(rest, " ")...)
 	}
-	log.Debug().Strs("cmd", parts).Msg("")
+	log.Trace().Strs("cmd", parts).Msg("")
 	s.RLock()
 	defer s.RUnlock()
 	if cmd == "q" {
@@ -247,6 +247,7 @@ func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
 		}
 		break
 	}
+	log.Trace().Str("response", ret).Send()
 	conn.Write([]byte(ret))
 	return false
 }
