@@ -146,6 +146,7 @@ func main() {
 
 	go func() {
 		fc.Run()
+		hamlib.Close()
 		wg.Done()
 	}()
 
@@ -173,7 +174,12 @@ func main() {
 	fc.SendAndWait("sub radio all")
 	fc.SendAndWait("sub tx all")
 
-	hamlib.Run()
+	wg.Add(1)
+	go func() {
+		hamlib.Run()
+		fc.Close()
+		wg.Done()
+	}()
 
 	wg.Wait()
 }
