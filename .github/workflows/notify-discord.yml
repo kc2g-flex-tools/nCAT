@@ -1,0 +1,21 @@
+name: Notify Discord
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  discordNotification:
+    name: Discord Notification
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Discord Notification
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          username: releaseBot
+          severity: info
+          text: ":cat:"
+          description: "nCAT Release: ${{github.event.release.tag_name}} - ${{github.event.release.name}}"
+          details: "${{github.event.release.body}}"
