@@ -19,3 +19,4 @@ jobs:
           text: ":cat:"
           description: "nCAT Release: ${{github.event.release.tag_name}} - ${{github.event.release.name}}"
           details: "${{github.event.release.body}}"
+          footer: ""
