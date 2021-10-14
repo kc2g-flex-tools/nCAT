@@ -89,7 +89,7 @@ func get_mode(_ Conn, _ []string) (string, error) {
 
 	translated, ok := modesFromFlex[slice["mode"]]
 	if !ok {
-		return "", fmt.Errorf("Unknown mode %s", slice["mode"])
+		return "", fmt.Errorf("unknown mode %s", slice["mode"])
 	}
 
 	lo, err := strconv.Atoi(slice["filter_lo"])
@@ -106,7 +106,7 @@ func get_mode(_ Conn, _ []string) (string, error) {
 func set_mode(_ Conn, args []string) (string, error) {
 	mode, ok := modesToFlex[args[0]]
 	if !ok {
-		return "", fmt.Errorf("Unknown mode %s", args[0])
+		return "", fmt.Errorf("unknown mode %s", args[0])
 	}
 
 	width, err := strconv.Atoi(args[1])

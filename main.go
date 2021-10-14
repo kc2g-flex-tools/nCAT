@@ -72,7 +72,7 @@ func bindClient() {
 
 	var found, cmdComplete bool
 
-	for !(found && cmdComplete) {
+	for !found || !cmdComplete {
 		select {
 		case upd := <-clients:
 			if upd.CurrentState["station"] == cfg.Station {
@@ -100,7 +100,7 @@ func findSlice() {
 
 	var found, cmdComplete bool
 
-	for !(found && cmdComplete) {
+	for !found || !cmdComplete {
 		select {
 		case upd := <-slices:
 			if upd.CurrentState["index_letter"] == cfg.Slice && upd.CurrentState["client_handle"] == ClientID {
@@ -158,7 +158,7 @@ func main() {
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
-		_ = <-c
+		<-c
 		log.Info().Msg("Exit on SIGINT")
 		fc.Close()
 		hamlib.Close()

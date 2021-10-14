@@ -50,7 +50,7 @@ func set_ptt(_ Conn, args []string) (string, error) {
 	if tx == "1" {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
 		if !ok {
-			return "", fmt.Errorf("Couldn't get slice %s", SliceIdx)
+			return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
 		}
 		if slice["tx"] != "1" {
 			res := fc.SliceSet(SliceIdx, flexclient.Object{"tx": "1"})

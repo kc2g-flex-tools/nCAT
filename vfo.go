@@ -42,12 +42,14 @@ func get_vfo(_ Conn, _ []string) (string, error) {
 }
 
 func set_vfo(_ Conn, args []string) (string, error) {
-	if args[0] == "?" {
+	switch args[0] {
+	case "?":
+		// List available VFOs
 		return "VFOA\n", nil
-	} else if args[0] == "VFOA" {
+	case "VFOA":
 		return Success, nil
-	} else {
-		return "", fmt.Errorf("No such VFO %s", args[0])
+	default:
+		return "", fmt.Errorf("no such VFO %s", args[0])
 	}
 }
 

@@ -31,7 +31,7 @@ func init() {
 func get_level_preamp_att(_ Conn, args []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
-		return "", fmt.Errorf("Couldn't get slice %s", SliceIdx)
+		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
 	}
 
 	gain, err := strconv.Atoi(slice["rfgain"])
@@ -64,7 +64,7 @@ func set_level_preamp_att(_ Conn, args []string) (string, error) {
 
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
-		return "", fmt.Errorf("Couldn't get slice %s", SliceIdx)
+		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
 	}
 
 	currLevel, err := strconv.ParseFloat(slice["rfgain"], 64)
@@ -95,7 +95,7 @@ func set_level_preamp_att(_ Conn, args []string) (string, error) {
 		}
 
 		if level < 0 || level > 24 {
-			return "", fmt.Errorf("Invalid rfgain %f", level)
+			return "", fmt.Errorf("invalid rfgain %f", level)
 		}
 		obj["rfgain"] = fmt.Sprintf("%.0f", level)
 	}
