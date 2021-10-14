@@ -173,6 +173,7 @@ func main() {
 
 	fc.SendAndWait("sub radio all")
 	fc.SendAndWait("sub tx all")
+	fc.SendAndWait("sub atu all")
 
 	wg.Add(1)
 	go func() {
