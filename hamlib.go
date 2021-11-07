@@ -166,6 +166,7 @@ func (s *HamlibServer) handleClient(conn Conn) {
 			s.clients = append(s.clients[:i], s.clients[i+1:]...)
 		}
 	}
+	conn.Close()
 	s.Unlock()
 }
 
