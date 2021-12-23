@@ -21,6 +21,7 @@ var cfg struct {
 	Listen           string
 	Profile          string
 	LogLevel         string
+	ChkVFOMode       string
 }
 
 func init() {
@@ -31,6 +32,7 @@ func init() {
 	flag.StringVar(&cfg.Listen, "listen", ":4532", "hamlib listen [address]:port")
 	flag.StringVar(&cfg.Profile, "profile", "", "global profile to load on startup for -headless mode")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "minimum level of messages to log to console")
+	flag.StringVar(&cfg.ChkVFOMode, "chkvfo-mode", "new", "chkvfo syntax (old,new)")
 }
 
 var fc *flexclient.FlexClient
