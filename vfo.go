@@ -31,6 +31,13 @@ func init() {
 			Args(0),
 		),
 	)
+	hamlib.AddHandler(
+		names{{`S`}, {`\set_split_vfo`}},
+		NewHandler(
+			set_split_vfo,
+			Args(2),
+		),
+	)
 }
 
 func chk_vfo(_ Conn, _ []string) (string, error) {
@@ -61,4 +68,12 @@ func set_vfo(_ Conn, args []string) (string, error) {
 
 func get_split_vfo(_ Conn, _ []string) (string, error) {
 	return "0\nVFOA\n", nil
+}
+
+func set_split_vfo(_ Conn, args []string) (string, error) {
+	if args[0] == "0" && args[1] == "VFOA" {
+		return Success, nil
+	} else {
+		return "", fmt.Errorf("invalid set split S %s %s", args[0], args[1])
+	}
 }
