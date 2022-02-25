@@ -51,10 +51,12 @@ func set_vfo(_ Conn, args []string) (string, error) {
 		// List available VFOs
 		return "VFOA\n", nil
 	case "VFOA":
+	case "Main":
+	case "TX":
+	case "RX":
 		return Success, nil
-	default:
-		return "", fmt.Errorf("no such VFO %s", args[0])
 	}
+	return "", fmt.Errorf("no such VFO %s", args[0])
 }
 
 func get_split_vfo(_ Conn, _ []string) (string, error) {
