@@ -34,11 +34,11 @@ func init() {
 }
 
 func chk_vfo(_ Conn, _ []string) (string, error) {
-    if cfg.ChkVFOMode == "new" {
-        return "0\n", nil
-    } else {
-        return "CHKVFO 0\n", nil
-    }
+	if cfg.ChkVFOMode == "new" {
+		return "0\n", nil
+	} else {
+		return "CHKVFO 0\n", nil
+	}
 }
 
 func get_vfo(_ Conn, _ []string) (string, error) {
