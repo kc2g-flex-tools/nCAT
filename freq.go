@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-
-	"github.com/kc2g-flex-tools/flexclient"
 )
 
 func init() {
@@ -17,7 +15,6 @@ func init() {
 			ErrResponse("ERR\n"),
 		),
 	)
-
 	hamlib.AddHandler(
 		names{{`F`}, {`\set_freq`}},
 		NewHandler(
@@ -27,39 +24,30 @@ func init() {
 	)
 
 	hamlib.AddHandler(
-		names{{`j`}, {`\get_rit`}},
+		names{{`i`}, {`\get_split_freq`}},
 		NewHandler(
-			get_ritxit("rit"),
+			get_split_freq,
 			Args(0),
 		),
 	)
-
 	hamlib.AddHandler(
-		names{{`J`}, {`\set_rit`}},
+		names{{`I`}, {`\set_split_freq`}},
 		NewHandler(
-			set_ritxit("rit"),
-			Args(1),
-		),
-	)
-
-	hamlib.AddHandler(
-		names{{`z`}, {`\get_xit`}},
-		NewHandler(
-			get_ritxit("xit"),
-			Args(0),
-		),
-	)
-
-	hamlib.AddHandler(
-		names{{`Z`}, {`\set_xit`}},
-		NewHandler(
-			set_ritxit("xit"),
+			set_split_freq,
 			Args(1),
 		),
 	)
 }
 
 func get_freq(_ Conn, _ []string) (string, error) {
+	if swapVFO {
+		return get_split_freq_real()
+	} else {
+		return get_freq_real()
+	}
+}
+
+func get_freq_real() (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
@@ -73,6 +61,14 @@ func get_freq(_ Conn, _ []string) (string, error) {
 }
 
 func set_freq(_ Conn, args []string) (string, error) {
+	if swapVFO {
+		return set_split_freq_real(args)
+	} else {
+		return set_freq_real(args)
+	}
+}
+
+func set_freq_real(args []string) (string, error) {
 	freq, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return "", err
@@ -87,53 +83,58 @@ func set_freq(_ Conn, args []string) (string, error) {
 	return Success, nil
 }
 
-func get_ritxit(which string) func(Conn, []string) (string, error) {
-	return func(_ Conn, _ []string) (string, error) {
-		slice, ok := fc.GetObject("slice " + SliceIdx)
-
-		if !ok {
-			return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
-		}
-
-		on, err := strconv.Atoi(slice[which+"_on"])
-		if err != nil {
-			return "", err
-		}
-
-		freq, err := strconv.Atoi(slice[which+"_freq"])
-		if err != nil {
-			return "", err
-		}
-
-		if on == 0 {
-			freq = 0
-		}
-
-		return fmt.Sprintf("%d\n", freq), nil
+func get_split_freq(_ Conn, _ []string) (string, error) {
+	if swapVFO {
+		return get_freq_real()
+	} else {
+		return get_split_freq_real()
 	}
 }
 
-func set_ritxit(which string) func(Conn, []string) (string, error) {
-	return func(_ Conn, args []string) (string, error) {
-		freq, err := strconv.Atoi(args[0])
-		if err != nil {
-			return "", err
-		}
-
-		obj := flexclient.Object{}
-		if freq == 0 {
-			obj[which+"_on"] = "0"
-			obj[which+"_freq"] = "0"
-		} else {
-			obj[which+"_on"] = "1"
-			obj[which+"_freq"] = fmt.Sprintf("%d", freq)
-		}
-
-		res := fc.SliceSet(SliceIdx, obj)
-		if res.Error != 0 {
-			return "", fmt.Errorf("slice set %08X", res.Error)
-		}
-
-		return Success, nil
+func get_split_freq_real() (string, error) {
+	slice, ok := fc.GetObject("slice " + SliceIdx)
+	if !ok {
+		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
 	}
+
+	rxf, err := strconv.ParseFloat(slice["RF_frequency"], 64)
+	if err != nil {
+		return "", err
+	}
+
+	xit, err := strconv.Atoi(slice["xit_freq"])
+	if err != nil {
+		return "", err
+	}
+
+	freq := int64(math.Round(rxf*1e6) + float64(xit))
+	return fmt.Sprintf("%d\n", freq), nil
+}
+
+func set_split_freq(_ Conn, args []string) (string, error) {
+	if swapVFO {
+		return set_freq_real(args)
+	} else {
+		return set_split_freq_real(args)
+	}
+}
+
+func set_split_freq_real(args []string) (string, error) {
+	slice, ok := fc.GetObject("slice " + SliceIdx)
+	if !ok {
+		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
+	}
+
+	rxf, err := strconv.ParseFloat(slice["RF_frequency"], 64)
+	if err != nil {
+		return "", err
+	}
+
+	freq, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		return "", err
+	}
+
+	offset := int64(math.Round(freq - rxf*1e6))
+	return set_ritxit_freq("xit", offset)
 }

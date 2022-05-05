@@ -35,14 +35,14 @@ var stateString = "0\n" + // protocol version
 	"0xc00 10000\n" + //digi max
 	"0xc00 0\n" + // allow arbitrary
 	"0 0\n" + // end of filter widths
-	"0\n" + // max rit
-	"0\n" + // max xit
+	"99999\n" + // max rit
+	"99999\n" + // max xit
 	"0\n" + // max if_shift
 	"0\n" + // no announce capabilities
 	"0 8 16 24 32\n" + // preamp
 	"0 8\n" + // attenuator
-	"0x48400833be\n" + // func get: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
-	"0x48400833be\n" + // func set: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
+	"0x48c10833be\n" + // func get: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|RIT|TUNER|XIT|ANL|DIVERSITY
+	"0x48c10833be\n" + // func set: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|RIT|TUNER|XIT|ANL|DIVERSITY
 	"0x600023711f\n" + // level get: PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB (TODO: use metering protocol to add SWR|ALC|RFPOWER_METER|COMP_METER)
 	"0x600023711f\n" + // level set: PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
 	"0\n" + // parm get: none

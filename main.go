@@ -22,6 +22,7 @@ var cfg struct {
 	Profile          string
 	LogLevel         string
 	ChkVFOMode       string
+	SplitXIT         bool
 }
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 	flag.StringVar(&cfg.Profile, "profile", "", "global profile to load on startup for -headless mode")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "minimum level of messages to log to console")
 	flag.StringVar(&cfg.ChkVFOMode, "chkvfo-mode", "new", "chkvfo syntax (old,new)")
+	flag.BoolVar(&cfg.SplitXIT, "split-xit", false, "map split operation to XIT and create a fake VFOB")
 }
 
 var fc *flexclient.FlexClient
