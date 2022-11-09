@@ -38,9 +38,19 @@ func init() {
 			Args(2),
 		),
 	)
+	hamlib.AddHandler(
+		names{{`\get_lock_mode`}},
+		NewHandler(
+			zero,
+			Args(0),
+		),
+	)
 }
 
+var chkVFOexecuted bool
+
 func chk_vfo(_ Conn, _ []string) (string, error) {
+	chkVFOexecuted = true
 	if cfg.ChkVFOMode == "new" {
 		return "0\n", nil
 	} else {
