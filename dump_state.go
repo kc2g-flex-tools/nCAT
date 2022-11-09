@@ -52,7 +52,7 @@ func init() {
 	hamlib.AddHandler(
 		names{{`\dump_state`}},
 		NewHandler(
-			func(_ Conn, _ []string) (string, error) {
+			func(_ *Conn, _ []string) (string, error) {
 				return stateString, nil
 			},
 			Args(0),

@@ -30,7 +30,7 @@ func CustomError(err error, response string) error {
 	}
 }
 
-type HandlerFunc func(Conn, []string) (string, error)
+type HandlerFunc func(*Conn, []string) (string, error)
 
 type Handler struct {
 	cb          HandlerFunc
@@ -108,6 +108,12 @@ type Conn struct {
 	net.Conn
 }
 
+func NewConn(netConn net.Conn) Conn {
+	return Conn{
+		Conn: netConn,
+	}
+}
+
 func (s *HamlibServer) Listen(listen string) error {
 	l, err := net.Listen("tcp", listen)
 	if err != nil {
@@ -139,20 +145,18 @@ func (s *HamlibServer) Run() {
 		if err != nil {
 			goto out
 		}
-		conn := Conn{
-			Conn: netConn,
-		}
+		conn := NewConn(netConn)
 
 		s.Lock()
 		s.clients = append(s.clients, conn)
 		s.Unlock()
-		go s.handleClient(conn)
+		go s.handleClient(&conn)
 	}
 out:
 	return
 }
 
-func (s *HamlibServer) handleClient(conn Conn) {
+func (s *HamlibServer) handleClient(conn *Conn) {
 	lines := bufio.NewScanner(conn)
 	for lines.Scan() {
 		exit := s.handleCmd(conn, lines.Text())
@@ -170,7 +174,7 @@ func (s *HamlibServer) handleClient(conn Conn) {
 	s.Unlock()
 }
 
-func (s *HamlibServer) handleCmd(conn Conn, line string) bool {
+func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
 	if line == "" {
 		return false
 	}

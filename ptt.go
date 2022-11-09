@@ -24,7 +24,7 @@ func init() {
 	)
 }
 
-func get_ptt(_ Conn, _ []string) (string, error) {
+func get_ptt(_ *Conn, _ []string) (string, error) {
 	interlock, ok := fc.GetObject("interlock")
 	if !ok {
 		return "", fmt.Errorf("couldn't get interlock")
@@ -39,7 +39,7 @@ func get_ptt(_ Conn, _ []string) (string, error) {
 	}
 }
 
-func set_ptt(_ Conn, args []string) (string, error) {
+func set_ptt(_ *Conn, args []string) (string, error) {
 	tx := "1"
 	if args[0] == "0" {
 		tx = "0"

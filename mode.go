@@ -81,7 +81,7 @@ var centerFreq = map[string]int{
 	"DIGL": -1500,
 }
 
-func get_mode(_ Conn, _ []string) (string, error) {
+func get_mode(_ *Conn, _ []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("get slice %s failed", SliceIdx)
@@ -103,7 +103,7 @@ func get_mode(_ Conn, _ []string) (string, error) {
 	return fmt.Sprintf("%s\n%d\n", translated, hi-lo), nil
 }
 
-func set_mode(_ Conn, args []string) (string, error) {
+func set_mode(_ *Conn, args []string) (string, error) {
 	mode, ok := modesToFlex[args[0]]
 	if !ok {
 		return "", fmt.Errorf("unknown mode %s", args[0])

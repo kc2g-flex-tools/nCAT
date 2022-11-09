@@ -25,7 +25,7 @@ func init() {
 	)
 }
 
-func get_level_af(_ Conn, _ []string) (string, error) {
+func get_level_af(_ *Conn, _ []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
@@ -39,7 +39,7 @@ func get_level_af(_ Conn, _ []string) (string, error) {
 	return fmt.Sprintf("%.3f\n", audio_level), nil
 }
 
-func set_level_af(_ Conn, args []string) (string, error) {
+func set_level_af(_ *Conn, args []string) (string, error) {
 	audio_level, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return "", err

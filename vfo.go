@@ -49,7 +49,7 @@ func init() {
 
 var chkVFOexecuted bool
 
-func chk_vfo(_ Conn, _ []string) (string, error) {
+func chk_vfo(_ *Conn, _ []string) (string, error) {
 	chkVFOexecuted = true
 	if cfg.ChkVFOMode == "new" {
 		return "0\n", nil
@@ -58,11 +58,11 @@ func chk_vfo(_ Conn, _ []string) (string, error) {
 	}
 }
 
-func get_vfo(_ Conn, _ []string) (string, error) {
+func get_vfo(_ *Conn, _ []string) (string, error) {
 	return "VFOA\n", nil
 }
 
-func set_vfo(_ Conn, args []string) (string, error) {
+func set_vfo(_ *Conn, args []string) (string, error) {
 	switch args[0] {
 	case "?":
 		// List available VFOs
@@ -74,11 +74,11 @@ func set_vfo(_ Conn, args []string) (string, error) {
 	}
 }
 
-func get_split_vfo(_ Conn, _ []string) (string, error) {
+func get_split_vfo(_ *Conn, _ []string) (string, error) {
 	return "0\nVFOA\n", nil
 }
 
-func set_split_vfo(_ Conn, args []string) (string, error) {
+func set_split_vfo(_ *Conn, args []string) (string, error) {
 	if args[0] == "0" && args[1] == "VFOA" {
 		return Success, nil
 	} else {
