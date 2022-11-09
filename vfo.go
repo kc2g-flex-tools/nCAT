@@ -47,10 +47,8 @@ func init() {
 	)
 }
 
-var chkVFOexecuted bool
-
-func chk_vfo(_ *Conn, _ []string) (string, error) {
-	chkVFOexecuted = true
+func chk_vfo(conn *Conn, _ []string) (string, error) {
+	conn.chkVFOexecuted = true
 	if cfg.ChkVFOMode == "new" {
 		return "0\n", nil
 	} else {

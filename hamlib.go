@@ -106,6 +106,8 @@ var Error = "RPRT 1\n"
 
 type Conn struct {
 	net.Conn
+	// New enough hamlib will send \chk_vfo before \dump_state, keep track of whether it has.
+	chkVFOexecuted bool
 }
 
 func NewConn(netConn net.Conn) Conn {

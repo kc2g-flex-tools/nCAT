@@ -1,6 +1,6 @@
 package main
 
-var stateString = "0\n" + // protocol version
+var stateString = "1\n" + // protocol version
 	"2\n" + // hamlib model
 	"2\n" + // region
 	"30000.000000 54000000.000000 0xe2f -1 -1 0x1 0x0\n" + // RX: 30kHz - 54MHz, AM|CW|USB|LSB|FM|AMS|PKTUSB|PKTLSB
@@ -48,12 +48,26 @@ var stateString = "0\n" + // protocol version
 	"0\n" + // parm get: none
 	"0\n" // parm set: none
 
+var protocol1StateString = "vfo_ops=0x0\n" +
+	"targetable_vfo=0\n" +
+	"has_set_vfo=0\n" +
+	"has_get_vfo=1\n" +
+	"has_set_conf=0\n" +
+	"has_get_conf=0\n" +
+	"has_set_freq=1\n" +
+	"has_get_freq=1\n" +
+	"done\n"
+
 func init() {
 	hamlib.AddHandler(
 		names{{`\dump_state`}},
 		NewHandler(
-			func(_ *Conn, _ []string) (string, error) {
-				return stateString, nil
+			func(conn *Conn, _ []string) (string, error) {
+				var ret = stateString
+				if conn.chkVFOexecuted { // match hamlib behavior here
+					ret += protocol1StateString
+				}
+				return ret, nil
 			},
 			Args(0),
 		),
