@@ -19,7 +19,7 @@ func init() {
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `PREAMP`}, {`\get_level`, `PREAMP`}, {`L`, `ATT`}, {`\get_level`, `ATT`}},
+		names{{`L`, `PREAMP`}, {`\set_level`, `PREAMP`}, {`L`, `ATT`}, {`\set_level`, `ATT`}},
 		NewHandler(
 			set_level_preamp_att,
 			AllArgs(true),
