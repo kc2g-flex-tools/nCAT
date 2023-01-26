@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 var stateString = "1\n" + // protocol version
 	"2\n" + // hamlib model
 	"2\n" + // region
@@ -43,7 +45,7 @@ var stateString = "1\n" + // protocol version
 	"0 8\n" + // attenuator
 	"0x48400833be\n" + // func get: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
 	"0x48400833be\n" + // func set: NB|COMP|VOX|TONE|TSQL|FBKIN|ANF|NR|MON|MN|REV|TUNER|ANL|DIVERSITY
-	"0x600023711f\n" + // level get: PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB (TODO: use metering protocol to add SWR|ALC|RFPOWER_METER|COMP_METER)
+	"0x%x\n" + // level get: TBD at runtime
 	"0x600023711f\n" + // level set: PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
 	"0\n" + // parm get: none
 	"0\n" // parm set: none
@@ -63,7 +65,15 @@ func init() {
 		names{{`\dump_state`}},
 		NewHandler(
 			func(conn *Conn, _ []string) (string, error) {
-				var ret = stateString
+				var levelGetCaps uint64
+				if !cfg.Metering {
+					// PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB
+					levelGetCaps = 0x600023711f
+				} else {
+					// As above plus SWR|ALC|STRENGTH|RFPOWER_METER|COMP_METER|VD_METER|RFPOWER_METER_WATTS|TEMP_METER
+					levelGetCaps = 0x100e77023711f
+				}
+				var ret = fmt.Sprintf(stateString, levelGetCaps)
 				if conn.chkVFOexecuted { // match hamlib behavior here
 					ret += protocol1StateString
 				}

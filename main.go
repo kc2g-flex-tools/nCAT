@@ -22,10 +22,13 @@ var cfg struct {
 	Profile          string
 	LogLevel         string
 	ChkVFOMode       string
+	Metering         bool
+	UDPPort          int
 }
 
 func init() {
 	flag.StringVar(&cfg.RadioIP, "radio", ":discover:", "radio IP address or discovery spec")
+	flag.IntVar(&cfg.UDPPort, "udp-port", 0, "udp port to listen for VITA packets (0: random free port")
 	flag.StringVar(&cfg.Station, "station", "Flex", "station name to bind to or create")
 	flag.StringVar(&cfg.Slice, "slice", "A", "slice letter to control")
 	flag.BoolVar(&cfg.Headless, "headless", false, "run in headless mode")
@@ -33,6 +36,7 @@ func init() {
 	flag.StringVar(&cfg.Profile, "profile", "", "global profile to load on startup for -headless mode")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "minimum level of messages to log to console")
 	flag.StringVar(&cfg.ChkVFOMode, "chkvfo-mode", "new", "chkvfo syntax (old,new)")
+	flag.BoolVar(&cfg.Metering, "metering", false, "support reading meters from radio")
 }
 
 var fc *flexclient.FlexClient
@@ -177,6 +181,10 @@ func main() {
 	fc.SendAndWait("sub radio all")
 	fc.SendAndWait("sub tx all")
 	fc.SendAndWait("sub atu all")
+
+	if cfg.Metering {
+		enableMetering(fc)
+	}
 
 	wg.Add(1)
 	go func() {
