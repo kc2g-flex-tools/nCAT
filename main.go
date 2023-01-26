@@ -82,10 +82,11 @@ func bindClient() {
 				ClientUUID = upd.CurrentState["client_id"]
 				found = true
 			}
-		case <-cmdResult:
+		case <-cmdResult.C:
 			cmdComplete = true
 		}
 	}
+	cmdResult.Close()
 
 	fc.Unsubscribe(sub)
 
@@ -109,11 +110,11 @@ func findSlice() {
 				SliceIdx = strings.TrimPrefix(upd.Object, "slice ")
 				found = true
 			}
-		case <-cmdResult:
+		case <-cmdResult.C:
 			cmdComplete = true
 		}
 	}
-
+	cmdResult.Close()
 	fc.Unsubscribe(sub)
 	log.Info().Str("slice_idx", SliceIdx).Msg("Found slice")
 }
