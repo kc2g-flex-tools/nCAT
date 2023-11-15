@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -188,7 +189,7 @@ func dBmToRFPower(dBm float64) float64 {
 	return dBmToWatts(dBm) / 100
 }
 
-func get_level_metering(_ *Conn, args []string) (string, error) {
+func get_level_metering(ctx context.Context, args []string) (string, error) {
 	level := args[1]
 	conv, ok := meters[level]
 	if !ok {

@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 var stateString = "1\n" + // protocol version
 	"2\n" + // hamlib model
@@ -64,7 +67,8 @@ func init() {
 	hamlib.AddHandler(
 		names{{`\dump_state`}},
 		NewHandler(
-			func(conn *Conn, _ []string) (string, error) {
+			func(ctx context.Context, _ []string) (string, error) {
+				conn := getConn(ctx)
 				var levelGetCaps uint64
 				if !cfg.Metering {
 					// PREAMP|ATT|VOX|AF|RF|NR|RFPOWER|MICGAIN|KEYSPD|COMP|AGC|VOXGAIN|MONITOR_GAIN|NB

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -59,7 +60,7 @@ func init() {
 	)
 }
 
-func get_freq(_ *Conn, _ []string) (string, error) {
+func get_freq(ctx context.Context, _ []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
@@ -72,7 +73,7 @@ func get_freq(_ *Conn, _ []string) (string, error) {
 	return fmt.Sprintf("%d\n", int64(math.Round(freq*1e6))), nil
 }
 
-func set_freq(_ *Conn, args []string) (string, error) {
+func set_freq(ctx context.Context, args []string) (string, error) {
 	freq, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return "", err
@@ -87,8 +88,8 @@ func set_freq(_ *Conn, args []string) (string, error) {
 	return Success, nil
 }
 
-func get_ritxit(which string) func(*Conn, []string) (string, error) {
-	return func(_ *Conn, _ []string) (string, error) {
+func get_ritxit(which string) func(context.Context, []string) (string, error) {
+	return func(ctx context.Context, _ []string) (string, error) {
 		slice, ok := fc.GetObject("slice " + SliceIdx)
 
 		if !ok {
@@ -113,8 +114,8 @@ func get_ritxit(which string) func(*Conn, []string) (string, error) {
 	}
 }
 
-func set_ritxit(which string) func(*Conn, []string) (string, error) {
-	return func(_ *Conn, args []string) (string, error) {
+func set_ritxit(which string) func(context.Context, []string) (string, error) {
+	return func(ctx context.Context, args []string) (string, error) {
 		freq, err := strconv.Atoi(args[0])
 		if err != nil {
 			return "", err

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -15,7 +16,6 @@ type HamlibServer struct {
 	listener net.Listener
 	clients  []net.Conn
 	handlers map[string]interface{}
-	exit     chan struct{}
 }
 
 type customError struct {
@@ -30,7 +30,7 @@ func CustomError(err error, response string) error {
 	}
 }
 
-type HandlerFunc func(*Conn, []string) (string, error)
+type HandlerFunc func(context.Context, []string) (string, error)
 
 type Handler struct {
 	cb          HandlerFunc
@@ -97,7 +97,6 @@ func NewHamlibServer() *HamlibServer {
 	return &HamlibServer{
 		clients:  []net.Conn{},
 		handlers: map[string]interface{}{},
-		exit:     make(chan struct{}),
 	}
 }
 
@@ -126,13 +125,9 @@ func (s *HamlibServer) Listen(listen string) error {
 	return nil
 }
 
-func (s *HamlibServer) Close() {
-	close(s.exit)
-}
-
-func (s *HamlibServer) Run() {
+func (s *HamlibServer) Run(ctx context.Context) {
 	go func() {
-		<-s.exit
+		<-ctx.Done()
 		s.RLock()
 		defer s.RUnlock()
 
@@ -152,16 +147,17 @@ func (s *HamlibServer) Run() {
 		s.Lock()
 		s.clients = append(s.clients, conn)
 		s.Unlock()
-		go s.handleClient(&conn)
+		clientCtx := context.WithValue(ctx, connKey{}, &conn)
+		go s.handleClient(clientCtx, &conn)
 	}
 out:
 	return
 }
 
-func (s *HamlibServer) handleClient(conn *Conn) {
+func (s *HamlibServer) handleClient(ctx context.Context, conn *Conn) {
 	lines := bufio.NewScanner(conn)
 	for lines.Scan() {
-		exit := s.handleCmd(conn, lines.Text())
+		exit := s.handleCmd(ctx, conn, lines.Text())
 		if exit {
 			break
 		}
@@ -176,7 +172,7 @@ func (s *HamlibServer) handleClient(conn *Conn) {
 	s.Unlock()
 }
 
-func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
+func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) bool {
 	if line == "" {
 		return false
 	}
@@ -231,7 +227,7 @@ func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
 			} else if handler.maxArgs != nil && len(args) > *handler.maxArgs {
 				e = fmt.Errorf("required max %d args, got %d", *handler.maxArgs, len(args))
 			} else {
-				ret, e = handler.cb(conn, args)
+				ret, e = handler.cb(ctx, args)
 			}
 
 			if e != nil {
