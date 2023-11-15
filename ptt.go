@@ -9,16 +9,16 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`t`}, {`\get_ptt`}},
 		NewHandler(
+			"get_ptt", "t",
 			get_ptt,
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`T`}, {`\set_ptt`}},
 		NewHandler(
+			"set_ptt", "T",
 			set_ptt,
 			Args(1),
 		),

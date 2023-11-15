@@ -4,8 +4,8 @@ import "context"
 
 func init() {
 	hamlib.AddHandler(
-		names{{`\get_powerstat`}},
 		NewHandler(
+			"get_powerstat", "",
 			func(ctx context.Context, _ []string) (string, error) {
 				return "1\n", nil
 			},

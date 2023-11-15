@@ -11,8 +11,8 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`f`}, {`\get_freq`}},
 		NewHandler(
+			"get_freq", "f",
 			get_freq,
 			Args(0),
 			ErrResponse("ERR\n"),
@@ -20,40 +20,40 @@ func init() {
 	)
 
 	hamlib.AddHandler(
-		names{{`F`}, {`\set_freq`}},
 		NewHandler(
+			"set_freq", "F",
 			set_freq,
 			Args(1),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`j`}, {`\get_rit`}},
 		NewHandler(
+			"get_rit", "j",
 			get_ritxit("rit"),
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`J`}, {`\set_rit`}},
 		NewHandler(
+			"set_rit", "J",
 			set_ritxit("rit"),
 			Args(1),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`z`}, {`\get_xit`}},
 		NewHandler(
+			"get_xit", "z",
 			get_ritxit("xit"),
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`Z`}, {`\set_xit`}},
 		NewHandler(
+			"set_xit", "Z",
 			set_ritxit("xit"),
 			Args(1),
 		),

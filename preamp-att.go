@@ -10,23 +10,27 @@ import (
 )
 
 func init() {
-	hamlib.AddHandler(
-		names{{`l`, `PREAMP`}, {`\get_level`, `PREAMP`}, {`l`, `ATT`}, {`\get_level`, `ATT`}},
-		NewHandler(
-			get_level_preamp_att,
-			AllArgs(true),
-			Args(2),
-		),
-	)
+	for _, level := range []string{"PREAMP", "ATT"} {
+		hamlib.AddHandler(
+			NewHandler(
+				"get_level", "l",
+				get_level_preamp_att,
+				RequiredArgs(level),
+				AllArgs(true),
+				Args(2),
+			),
+		)
 
-	hamlib.AddHandler(
-		names{{`L`, `PREAMP`}, {`\set_level`, `PREAMP`}, {`L`, `ATT`}, {`\set_level`, `ATT`}},
-		NewHandler(
-			set_level_preamp_att,
-			AllArgs(true),
-			Args(3),
-		),
-	)
+		hamlib.AddHandler(
+			NewHandler(
+				"set_level", "L",
+				set_level_preamp_att,
+				RequiredArgs(level),
+				AllArgs(true),
+				Args(3),
+			),
+		)
+	}
 }
 
 func get_level_preamp_att(ctx context.Context, args []string) (string, error) {

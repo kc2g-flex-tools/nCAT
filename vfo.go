@@ -7,43 +7,43 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`\chk_vfo`}},
 		NewHandler(
+			"chk_vfo", "",
 			chk_vfo,
 			Args(0),
 		),
 	)
 	hamlib.AddHandler(
-		names{{`v`}, {`\get_vfo`}},
 		NewHandler(
+			"get_vfo", "v",
 			get_vfo,
 			Args(0),
 		),
 	)
 	hamlib.AddHandler(
-		names{{`V`}, {`\set_vfo`}},
 		NewHandler(
+			"set_vfo", "V",
 			set_vfo,
 			Args(1),
 		),
 	)
 	hamlib.AddHandler(
-		names{{`s`}, {`\get_split_vfo`}},
 		NewHandler(
+			"get_split_vfo", "s",
 			get_split_vfo,
 			Args(0),
 		),
 	)
 	hamlib.AddHandler(
-		names{{`S`}, {`\set_split_vfo`}},
 		NewHandler(
+			"set_split_vfo", "S",
 			set_split_vfo,
 			Args(2),
 		),
 	)
 	hamlib.AddHandler(
-		names{{`\get_lock_mode`}},
 		NewHandler(
+			"get_lock_mode", "",
 			zero,
 			Args(0),
 		),

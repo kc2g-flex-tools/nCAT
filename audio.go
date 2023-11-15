@@ -10,17 +10,19 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`l`, `AF`}, {`\get_level`, `AF`}},
 		NewHandler(
+			"get_level", "l",
 			get_level_af,
+			RequiredArgs("AF"),
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `AF`}, {`\set_level`, `AF`}},
 		NewHandler(
+			"set_level", "L",
 			set_level_af,
+			RequiredArgs("AF"),
 			Args(1),
 		),
 	)

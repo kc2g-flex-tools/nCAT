@@ -7,17 +7,19 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`u`, `TUNER`}, {`\get_func`, `TUNER`}},
 		NewHandler(
+			"get_func", "u",
 			get_func_tuner,
+			RequiredArgs("TUNER"),
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`U`, `TUNER`}, {`\set_func`, `TUNER`}},
 		NewHandler(
+			"set_func", "U",
 			set_func_tuner,
+			RequiredArgs("TUNER"),
 			Args(1),
 		),
 	)

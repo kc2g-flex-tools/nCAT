@@ -33,15 +33,28 @@ func CustomError(err error, response string) error {
 type HandlerFunc func(context.Context, []string) (string, error)
 
 type Handler struct {
-	cb          HandlerFunc
-	minArgs     *int
-	maxArgs     *int
-	allArgs     bool
-	errResponse *string
+	Name         string
+	ShortName    string
+	cb           HandlerFunc
+	requiredArgs []string
+	minArgs      *int
+	maxArgs      *int
+	allArgs      bool
+	errResponse  *string
 }
 
 type Option interface {
 	apply(h *Handler)
+}
+
+type requiredArgs []string
+
+func (ra requiredArgs) apply(h *Handler) {
+	x := []string(ra)
+	h.requiredArgs = x
+}
+func RequiredArgs(ra ...string) requiredArgs {
+	return requiredArgs(ra)
 }
 
 type MinArgs int
@@ -79,11 +92,11 @@ func (er ErrResponse) apply(h *Handler) {
 	h.errResponse = &x
 }
 
-type names [][]string
-
-func NewHandler(cb HandlerFunc, opts ...Option) Handler {
+func NewHandler(name, shortName string, cb HandlerFunc, opts ...Option) Handler {
 	h := Handler{
-		cb: cb,
+		Name:      name,
+		ShortName: shortName,
+		cb:        cb,
 	}
 
 	for _, o := range opts {
@@ -178,9 +191,10 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 	}
 
 	cmd := line[0:1]
-	rest := strings.TrimLeft(line[1:], " ")
+	var rest string
 
 	if cmd == "\\" {
+		line = line[1:]
 		spaceIdx := strings.Index(line, " ")
 		if spaceIdx == -1 {
 			cmd = line
@@ -189,6 +203,9 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 			cmd = line[:spaceIdx]
 			rest = line[spaceIdx+1:]
 		}
+	} else {
+		cmd = "short:" + cmd
+		rest = strings.TrimLeft(line[1:], " ")
 	}
 
 	parts := []string{cmd}
@@ -227,7 +244,8 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 			} else if handler.maxArgs != nil && len(args) > *handler.maxArgs {
 				e = fmt.Errorf("required max %d args, got %d", *handler.maxArgs, len(args))
 			} else {
-				ret, e = handler.cb(ctx, args)
+				handlerCtx := context.WithValue(ctx, handlerKey{}, &handler)
+				ret, e = handler.cb(handlerCtx, args)
 			}
 
 			if e != nil {
@@ -255,19 +273,29 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 	return false
 }
 
-func (s *HamlibServer) AddHandler(names names, handler Handler) {
+func (s *HamlibServer) AddHandler(handler Handler) {
 	s.Lock()
 	defer s.Unlock()
 
+	names := []string{handler.Name}
+	if handler.ShortName != "" {
+		names = append(names, "short:"+handler.ShortName)
+	}
+
 	for _, name := range names {
 		table := s.handlers
-		for _, part := range name[:len(name)-1] {
+		nameWithArgs := []string{name}
+		if len(handler.requiredArgs) > 0 {
+			nameWithArgs = append(nameWithArgs, handler.requiredArgs...)
+		}
+
+		for _, part := range nameWithArgs[:len(nameWithArgs)-1] {
 			if table[part] == nil {
 				table[part] = map[string]interface{}{}
 			}
 			table = table[part].(map[string]interface{})
 		}
 
-		table[name[len(name)-1]] = handler
+		table[nameWithArgs[len(nameWithArgs)-1]] = handler
 	}
 }

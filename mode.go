@@ -10,8 +10,8 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`m`}, {`\get_mode`}},
 		NewHandler(
+			"get_mode", "m",
 			get_mode,
 			Args(0),
 			Args(0),
@@ -19,8 +19,8 @@ func init() {
 	)
 
 	hamlib.AddHandler(
-		names{{`M`}, {`\set_mode`}},
 		NewHandler(
+			"set_mode", "M",
 			set_mode,
 			Args(2),
 		),

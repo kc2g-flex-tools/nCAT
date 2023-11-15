@@ -10,33 +10,37 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`l`, `RFPOWER`}, {`\get_level`, `RFPOWER`}},
 		NewHandler(
+			"get_level", "l",
 			get_level_rfpower,
+			RequiredArgs("RFPOWER"),
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `RFPOWER`}, {`\set_level`, `RFPOWER`}},
 		NewHandler(
+			"set_level", "L",
 			set_level_rfpower,
+			RequiredArgs("RFPOWER"),
 			Args(1),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`l`, `RF`}, {`\get_level`, `RF`}},
 		NewHandler(
+			"get_level", "l",
 			get_level_rf,
+			RequiredArgs("RF"),
 			Args(0),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `RF`}, {`\set_level`, `RF`}},
 		NewHandler(
+			"set_level", "L",
 			set_level_rf,
+			RequiredArgs("RF"),
 			Args(1),
 		),
 	)

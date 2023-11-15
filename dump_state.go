@@ -65,8 +65,8 @@ var protocol1StateString = "vfo_ops=0x0\n" +
 
 func init() {
 	hamlib.AddHandler(
-		names{{`\dump_state`}},
 		NewHandler(
+			"dump_state", "",
 			func(ctx context.Context, _ []string) (string, error) {
 				conn := getConn(ctx)
 				var levelGetCaps uint64

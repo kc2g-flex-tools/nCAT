@@ -8,8 +8,8 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`w`}, {`\send_cmd`}},
 		NewHandler(
+			"send_cmd", "w",
 			send_cmd,
 		),
 	)
