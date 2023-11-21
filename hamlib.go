@@ -41,6 +41,7 @@ type Handler struct {
 	maxArgs      *int
 	allArgs      bool
 	errResponse  *string
+	fieldNames   []string
 }
 
 type Option interface {
@@ -90,6 +91,16 @@ type ErrResponse string
 func (er ErrResponse) apply(h *Handler) {
 	x := string(er)
 	h.errResponse = &x
+}
+
+type fieldNames []string
+
+func (fn fieldNames) apply(h *Handler) {
+	x := []string(fn)
+	h.fieldNames = x
+}
+func FieldNames(fn ...string) fieldNames {
+	return fieldNames(fn)
 }
 
 func NewHandler(name, shortName string, cb HandlerFunc, opts ...Option) Handler {

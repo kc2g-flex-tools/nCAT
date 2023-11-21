@@ -40,6 +40,7 @@ func init() {
 			RequiredArgs(meter),
 			AllArgs(true),
 			Args(2),
+			FieldNames("Level Value"),
 		)
 
 		hamlib.AddHandler(handler)

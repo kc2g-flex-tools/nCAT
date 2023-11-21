@@ -13,6 +13,7 @@ func init() {
 			"get_ptt", "t",
 			get_ptt,
 			Args(0),
+			FieldNames("PTT"),
 		),
 	)
 

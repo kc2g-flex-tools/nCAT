@@ -11,6 +11,7 @@ func init() {
 			"chk_vfo", "",
 			chk_vfo,
 			Args(0),
+			FieldNames("ChkVFO"),
 		),
 	)
 	hamlib.AddHandler(
@@ -18,6 +19,7 @@ func init() {
 			"get_vfo", "v",
 			get_vfo,
 			Args(0),
+			FieldNames("VFO"),
 		),
 	)
 	hamlib.AddHandler(
@@ -32,6 +34,7 @@ func init() {
 			"get_split_vfo", "s",
 			get_split_vfo,
 			Args(0),
+			FieldNames("TX VFO"),
 		),
 	)
 	hamlib.AddHandler(
@@ -46,6 +49,7 @@ func init() {
 			"get_lock_mode", "",
 			zero,
 			Args(0),
+			FieldNames("Locked"),
 		),
 	)
 }

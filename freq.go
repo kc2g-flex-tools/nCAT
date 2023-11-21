@@ -16,6 +16,7 @@ func init() {
 			get_freq,
 			Args(0),
 			ErrResponse("ERR\n"),
+			FieldNames("Frequency"),
 		),
 	)
 
@@ -32,6 +33,7 @@ func init() {
 			"get_rit", "j",
 			get_ritxit("rit"),
 			Args(0),
+			FieldNames("RIT"),
 		),
 	)
 
@@ -48,6 +50,7 @@ func init() {
 			"get_xit", "z",
 			get_ritxit("xit"),
 			Args(0),
+			FieldNames("XIT"),
 		),
 	)
 

@@ -18,6 +18,7 @@ func init() {
 				RequiredArgs(level),
 				AllArgs(true),
 				Args(2),
+				FieldNames("Level Value"),
 			),
 		)
 

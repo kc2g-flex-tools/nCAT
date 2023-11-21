@@ -12,6 +12,7 @@ func init() {
 			get_func_tuner,
 			RequiredArgs("TUNER"),
 			Args(0),
+			FieldNames("Func Status"),
 		),
 	)
 

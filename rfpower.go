@@ -15,6 +15,7 @@ func init() {
 			get_level_rfpower,
 			RequiredArgs("RFPOWER"),
 			Args(0),
+			FieldNames("Level Value"),
 		),
 	)
 
@@ -33,6 +34,7 @@ func init() {
 			get_level_rf,
 			RequiredArgs("RF"),
 			Args(0),
+			FieldNames("Level Value"),
 		),
 	)
 

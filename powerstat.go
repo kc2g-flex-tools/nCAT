@@ -10,6 +10,7 @@ func init() {
 				return "1\n", nil
 			},
 			Args(0),
+			FieldNames("Power Status"),
 		),
 	)
 }

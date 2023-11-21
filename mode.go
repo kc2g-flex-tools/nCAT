@@ -14,7 +14,7 @@ func init() {
 			"get_mode", "m",
 			get_mode,
 			Args(0),
-			Args(0),
+			FieldNames("Mode", "Passband"),
 		),
 	)
 

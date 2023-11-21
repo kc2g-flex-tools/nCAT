@@ -15,6 +15,7 @@ func init() {
 			get_level_af,
 			RequiredArgs("AF"),
 			Args(0),
+			FieldNames("Level Value"),
 		),
 	)
 
