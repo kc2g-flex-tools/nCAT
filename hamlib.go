@@ -196,6 +196,13 @@ func (s *HamlibServer) handleClient(ctx context.Context, conn *Conn) {
 	s.Unlock()
 }
 
+var extMap = map[string]string{
+	"+": "\n",
+	";": ";",
+	"|": "|",
+	",": ",",
+}
+
 func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) bool {
 	if line == "" {
 		return false
@@ -203,6 +210,13 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 
 	cmd := line[0:1]
 	var rest string
+
+	extendedSep, extended := extMap[cmd]
+	if extended {
+		line = line[1:]
+		log.Trace().Str("extended", cmd).Str("sep", extendedSep).Msg("extended command")
+		cmd = line[0:1]
+	}
 
 	if cmd == "\\" {
 		line = line[1:]
@@ -271,6 +285,8 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 					}
 				}
 				log.Warn().Strs("cmd", parts).Err(e).Msg("Handler returned error")
+			} else if extended {
+				ret = processExtendedResponse(handler, parts, ret, extendedSep)
 			}
 		case nil:
 			log.Warn().Strs("cmd", parts[:i+1]).Msg("No handler found")
@@ -279,9 +295,44 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 		}
 		break
 	}
+
 	log.Trace().Str("response", ret).Send()
 	conn.Write([]byte(ret))
 	return false
+}
+
+func processExtendedResponse(handler Handler, cmdline []string, ret string, sep string) string {
+	fieldNames := []string(handler.fieldNames)
+	if fieldNames == nil {
+		fieldNames = []string{}
+	}
+
+	out := handler.Name + ":"
+	if len(cmdline) > 1 {
+		out += " " + strings.Join(cmdline[1:], " ")
+	}
+
+	lines := strings.Split(strings.TrimSuffix(ret, "\n"), "\n")
+	var sentRprt bool
+	for i, line := range lines {
+		out += sep
+		if strings.HasPrefix(line, "RPRT ") {
+			out += line
+			sentRprt = true
+		} else {
+			var fieldName string
+			if i < len(fieldNames) {
+				fieldName = fieldNames[i]
+			} else {
+				fieldName = "unknown"
+			}
+			out += fieldName + ": " + line
+		}
+	}
+	if !sentRprt {
+		out += sep + "RPRT 0"
+	}
+	return out + "\n"
 }
 
 func (s *HamlibServer) AddHandler(handler Handler) {
