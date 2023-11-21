@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net"
 	"strings"
@@ -15,7 +16,6 @@ type HamlibServer struct {
 	listener net.Listener
 	clients  []net.Conn
 	handlers map[string]interface{}
-	exit     chan struct{}
 }
 
 type customError struct {
@@ -30,18 +30,32 @@ func CustomError(err error, response string) error {
 	}
 }
 
-type HandlerFunc func(*Conn, []string) (string, error)
+type HandlerFunc func(context.Context, []string) (string, error)
 
 type Handler struct {
-	cb          HandlerFunc
-	minArgs     *int
-	maxArgs     *int
-	allArgs     bool
-	errResponse *string
+	Name         string
+	ShortName    string
+	cb           HandlerFunc
+	requiredArgs []string
+	minArgs      *int
+	maxArgs      *int
+	allArgs      bool
+	errResponse  *string
+	fieldNames   []string
 }
 
 type Option interface {
 	apply(h *Handler)
+}
+
+type requiredArgs []string
+
+func (ra requiredArgs) apply(h *Handler) {
+	x := []string(ra)
+	h.requiredArgs = x
+}
+func RequiredArgs(ra ...string) requiredArgs {
+	return requiredArgs(ra)
 }
 
 type MinArgs int
@@ -79,11 +93,21 @@ func (er ErrResponse) apply(h *Handler) {
 	h.errResponse = &x
 }
 
-type names [][]string
+type fieldNames []string
 
-func NewHandler(cb HandlerFunc, opts ...Option) Handler {
+func (fn fieldNames) apply(h *Handler) {
+	x := []string(fn)
+	h.fieldNames = x
+}
+func FieldNames(fn ...string) fieldNames {
+	return fieldNames(fn)
+}
+
+func NewHandler(name, shortName string, cb HandlerFunc, opts ...Option) Handler {
 	h := Handler{
-		cb: cb,
+		Name:      name,
+		ShortName: shortName,
+		cb:        cb,
 	}
 
 	for _, o := range opts {
@@ -97,7 +121,6 @@ func NewHamlibServer() *HamlibServer {
 	return &HamlibServer{
 		clients:  []net.Conn{},
 		handlers: map[string]interface{}{},
-		exit:     make(chan struct{}),
 	}
 }
 
@@ -126,13 +149,9 @@ func (s *HamlibServer) Listen(listen string) error {
 	return nil
 }
 
-func (s *HamlibServer) Close() {
-	close(s.exit)
-}
-
-func (s *HamlibServer) Run() {
+func (s *HamlibServer) Run(ctx context.Context) {
 	go func() {
-		<-s.exit
+		<-ctx.Done()
 		s.RLock()
 		defer s.RUnlock()
 
@@ -152,16 +171,17 @@ func (s *HamlibServer) Run() {
 		s.Lock()
 		s.clients = append(s.clients, conn)
 		s.Unlock()
-		go s.handleClient(&conn)
+		clientCtx := context.WithValue(ctx, connKey{}, &conn)
+		go s.handleClient(clientCtx, &conn)
 	}
 out:
 	return
 }
 
-func (s *HamlibServer) handleClient(conn *Conn) {
+func (s *HamlibServer) handleClient(ctx context.Context, conn *Conn) {
 	lines := bufio.NewScanner(conn)
 	for lines.Scan() {
-		exit := s.handleCmd(conn, lines.Text())
+		exit := s.handleCmd(ctx, conn, lines.Text())
 		if exit {
 			break
 		}
@@ -176,15 +196,30 @@ func (s *HamlibServer) handleClient(conn *Conn) {
 	s.Unlock()
 }
 
-func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
+var extMap = map[string]string{
+	"+": "\n",
+	";": ";",
+	"|": "|",
+	",": ",",
+}
+
+func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) bool {
 	if line == "" {
 		return false
 	}
 
 	cmd := line[0:1]
-	rest := strings.TrimLeft(line[1:], " ")
+	var rest string
+
+	extendedSep, extended := extMap[cmd]
+	if extended {
+		line = line[1:]
+		log.Trace().Str("extended", cmd).Str("sep", extendedSep).Msg("extended command")
+		cmd = line[0:1]
+	}
 
 	if cmd == "\\" {
+		line = line[1:]
 		spaceIdx := strings.Index(line, " ")
 		if spaceIdx == -1 {
 			cmd = line
@@ -193,6 +228,9 @@ func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
 			cmd = line[:spaceIdx]
 			rest = line[spaceIdx+1:]
 		}
+	} else {
+		cmd = "short:" + cmd
+		rest = strings.TrimLeft(line[1:], " ")
 	}
 
 	parts := []string{cmd}
@@ -231,7 +269,8 @@ func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
 			} else if handler.maxArgs != nil && len(args) > *handler.maxArgs {
 				e = fmt.Errorf("required max %d args, got %d", *handler.maxArgs, len(args))
 			} else {
-				ret, e = handler.cb(conn, args)
+				handlerCtx := context.WithValue(ctx, handlerKey{}, &handler)
+				ret, e = handler.cb(handlerCtx, args)
 			}
 
 			if e != nil {
@@ -246,6 +285,8 @@ func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
 					}
 				}
 				log.Warn().Strs("cmd", parts).Err(e).Msg("Handler returned error")
+			} else if extended {
+				ret = processExtendedResponse(handler, parts, ret, extendedSep)
 			}
 		case nil:
 			log.Warn().Strs("cmd", parts[:i+1]).Msg("No handler found")
@@ -254,24 +295,69 @@ func (s *HamlibServer) handleCmd(conn *Conn, line string) bool {
 		}
 		break
 	}
+
 	log.Trace().Str("response", ret).Send()
 	conn.Write([]byte(ret))
 	return false
 }
 
-func (s *HamlibServer) AddHandler(names names, handler Handler) {
+func processExtendedResponse(handler Handler, cmdline []string, ret string, sep string) string {
+	fieldNames := []string(handler.fieldNames)
+	if fieldNames == nil {
+		fieldNames = []string{}
+	}
+
+	out := handler.Name + ":"
+	if len(cmdline) > 1 {
+		out += " " + strings.Join(cmdline[1:], " ")
+	}
+
+	lines := strings.Split(strings.TrimSuffix(ret, "\n"), "\n")
+	var sentRprt bool
+	for i, line := range lines {
+		out += sep
+		if strings.HasPrefix(line, "RPRT ") {
+			out += line
+			sentRprt = true
+		} else {
+			var fieldName string
+			if i < len(fieldNames) {
+				fieldName = fieldNames[i]
+			} else {
+				fieldName = "unknown"
+			}
+			out += fieldName + ": " + line
+		}
+	}
+	if !sentRprt {
+		out += sep + "RPRT 0"
+	}
+	return out + "\n"
+}
+
+func (s *HamlibServer) AddHandler(handler Handler) {
 	s.Lock()
 	defer s.Unlock()
 
+	names := []string{handler.Name}
+	if handler.ShortName != "" {
+		names = append(names, "short:"+handler.ShortName)
+	}
+
 	for _, name := range names {
 		table := s.handlers
-		for _, part := range name[:len(name)-1] {
+		nameWithArgs := []string{name}
+		if len(handler.requiredArgs) > 0 {
+			nameWithArgs = append(nameWithArgs, handler.requiredArgs...)
+		}
+
+		for _, part := range nameWithArgs[:len(nameWithArgs)-1] {
 			if table[part] == nil {
 				table[part] = map[string]interface{}{}
 			}
 			table = table[part].(map[string]interface{})
 		}
 
-		table[name[len(name)-1]] = handler
+		table[nameWithArgs[len(nameWithArgs)-1]] = handler
 	}
 }

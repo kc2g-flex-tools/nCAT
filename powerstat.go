@@ -1,13 +1,16 @@
 package main
 
+import "context"
+
 func init() {
 	hamlib.AddHandler(
-		names{{`\get_powerstat`}},
 		NewHandler(
-			func(_ *Conn, _ []string) (string, error) {
+			"get_powerstat", "",
+			func(ctx context.Context, _ []string) (string, error) {
 				return "1\n", nil
 			},
 			Args(0),
+			FieldNames("Power Status"),
 		),
 	)
 }

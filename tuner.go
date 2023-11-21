@@ -1,26 +1,32 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 func init() {
 	hamlib.AddHandler(
-		names{{`u`, `TUNER`}, {`\get_func`, `TUNER`}},
 		NewHandler(
+			"get_func", "u",
 			get_func_tuner,
+			RequiredArgs("TUNER"),
 			Args(0),
+			FieldNames("Func Status"),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`U`, `TUNER`}, {`\set_func`, `TUNER`}},
 		NewHandler(
+			"set_func", "U",
 			set_func_tuner,
+			RequiredArgs("TUNER"),
 			Args(1),
 		),
 	)
 }
 
-func get_func_tuner(_ *Conn, _ []string) (string, error) {
+func get_func_tuner(ctx context.Context, _ []string) (string, error) {
 	xmit, ok := fc.GetObject("transmit")
 	if !ok {
 		return "", fmt.Errorf("couldn't get transmit object")
@@ -41,7 +47,7 @@ func get_func_tuner(_ *Conn, _ []string) (string, error) {
 	}
 }
 
-func set_func_tuner(_ *Conn, args []string) (string, error) {
+func set_func_tuner(ctx context.Context, args []string) (string, error) {
 	disableATU := func() error {
 		xmit, ok := fc.GetObject("transmit")
 		if !ok {

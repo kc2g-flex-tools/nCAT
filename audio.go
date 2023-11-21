@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -9,23 +10,26 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`l`, `AF`}, {`\get_level`, `AF`}},
 		NewHandler(
+			"get_level", "l",
 			get_level_af,
+			RequiredArgs("AF"),
 			Args(0),
+			FieldNames("Level Value"),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `AF`}, {`\set_level`, `AF`}},
 		NewHandler(
+			"set_level", "L",
 			set_level_af,
+			RequiredArgs("AF"),
 			Args(1),
 		),
 	)
 }
 
-func get_level_af(_ *Conn, _ []string) (string, error) {
+func get_level_af(ctx context.Context, _ []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
@@ -39,7 +43,7 @@ func get_level_af(_ *Conn, _ []string) (string, error) {
 	return fmt.Sprintf("%.3f\n", audio_level), nil
 }
 
-func set_level_af(_ *Conn, args []string) (string, error) {
+func set_level_af(ctx context.Context, args []string) (string, error) {
 	audio_level, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return "", err

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/kc2g-flex-tools/flexclient"
@@ -8,23 +9,24 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`t`}, {`\get_ptt`}},
 		NewHandler(
+			"get_ptt", "t",
 			get_ptt,
 			Args(0),
+			FieldNames("PTT"),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`T`}, {`\set_ptt`}},
 		NewHandler(
+			"set_ptt", "T",
 			set_ptt,
 			Args(1),
 		),
 	)
 }
 
-func get_ptt(_ *Conn, _ []string) (string, error) {
+func get_ptt(ctx context.Context, _ []string) (string, error) {
 	interlock, ok := fc.GetObject("interlock")
 	if !ok {
 		return "", fmt.Errorf("couldn't get interlock")
@@ -39,7 +41,7 @@ func get_ptt(_ *Conn, _ []string) (string, error) {
 	}
 }
 
-func set_ptt(_ *Conn, args []string) (string, error) {
+func set_ptt(ctx context.Context, args []string) (string, error) {
 	tx := "1"
 	if args[0] == "0" {
 		tx = "0"

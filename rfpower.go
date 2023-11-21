@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -9,39 +10,45 @@ import (
 
 func init() {
 	hamlib.AddHandler(
-		names{{`l`, `RFPOWER`}, {`\get_level`, `RFPOWER`}},
 		NewHandler(
+			"get_level", "l",
 			get_level_rfpower,
+			RequiredArgs("RFPOWER"),
 			Args(0),
+			FieldNames("Level Value"),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `RFPOWER`}, {`\set_level`, `RFPOWER`}},
 		NewHandler(
+			"set_level", "L",
 			set_level_rfpower,
+			RequiredArgs("RFPOWER"),
 			Args(1),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`l`, `RF`}, {`\get_level`, `RF`}},
 		NewHandler(
+			"get_level", "l",
 			get_level_rf,
+			RequiredArgs("RF"),
 			Args(0),
+			FieldNames("Level Value"),
 		),
 	)
 
 	hamlib.AddHandler(
-		names{{`L`, `RF`}, {`\set_level`, `RF`}},
 		NewHandler(
+			"set_level", "L",
 			set_level_rf,
+			RequiredArgs("RF"),
 			Args(1),
 		),
 	)
 }
 
-func get_level_rfpower(_ *Conn, _ []string) (string, error) {
+func get_level_rfpower(ctx context.Context, _ []string) (string, error) {
 	xmit, ok := fc.GetObject("transmit")
 	if !ok {
 		return "", fmt.Errorf("couldn't get transmit obj")
@@ -54,7 +61,7 @@ func get_level_rfpower(_ *Conn, _ []string) (string, error) {
 	return fmt.Sprintf("%.3f\n", power), nil
 }
 
-func set_level_rfpower(_ *Conn, args []string) (string, error) {
+func set_level_rfpower(ctx context.Context, args []string) (string, error) {
 	power, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return "", err
@@ -67,7 +74,7 @@ func set_level_rfpower(_ *Conn, args []string) (string, error) {
 	return Success, nil
 }
 
-func get_level_rf(_ *Conn, _ []string) (string, error) {
+func get_level_rf(ctx context.Context, _ []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
@@ -86,7 +93,7 @@ func get_level_rf(_ *Conn, _ []string) (string, error) {
 	return fmt.Sprintf("%.3f\n", agct), nil
 }
 
-func set_level_rf(_ *Conn, args []string) (string, error) {
+func set_level_rf(ctx context.Context, args []string) (string, error) {
 	agct, err := strconv.ParseFloat(args[0], 64)
 	if err != nil {
 		return "", err

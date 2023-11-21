@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"os"
 	"os/signal"
@@ -151,9 +153,11 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	hamlibCtx, cancel := context.WithCancelCause(context.Background())
+
 	go func() {
 		fc.Run()
-		hamlib.Close()
+		cancel(errors.New("flexclient exited"))
 		wg.Done()
 	}()
 
@@ -168,7 +172,7 @@ func main() {
 		<-c
 		log.Info().Msg("Exit on SIGINT")
 		fc.Close()
-		hamlib.Close()
+		cancel(errors.New("trapped SIGINT"))
 	}()
 
 	if cfg.Headless {
@@ -188,7 +192,7 @@ func main() {
 
 	wg.Add(1)
 	go func() {
-		hamlib.Run()
+		hamlib.Run(hamlibCtx)
 		fc.Close()
 		wg.Done()
 	}()

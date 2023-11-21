@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -9,26 +10,31 @@ import (
 )
 
 func init() {
-	hamlib.AddHandler(
-		names{{`l`, `PREAMP`}, {`\get_level`, `PREAMP`}, {`l`, `ATT`}, {`\get_level`, `ATT`}},
-		NewHandler(
-			get_level_preamp_att,
-			AllArgs(true),
-			Args(2),
-		),
-	)
+	for _, level := range []string{"PREAMP", "ATT"} {
+		hamlib.AddHandler(
+			NewHandler(
+				"get_level", "l",
+				get_level_preamp_att,
+				RequiredArgs(level),
+				AllArgs(true),
+				Args(2),
+				FieldNames("Level Value"),
+			),
+		)
 
-	hamlib.AddHandler(
-		names{{`L`, `PREAMP`}, {`\set_level`, `PREAMP`}, {`L`, `ATT`}, {`\set_level`, `ATT`}},
-		NewHandler(
-			set_level_preamp_att,
-			AllArgs(true),
-			Args(3),
-		),
-	)
+		hamlib.AddHandler(
+			NewHandler(
+				"set_level", "L",
+				set_level_preamp_att,
+				RequiredArgs(level),
+				AllArgs(true),
+				Args(3),
+			),
+		)
+	}
 }
 
-func get_level_preamp_att(_ *Conn, args []string) (string, error) {
+func get_level_preamp_att(ctx context.Context, args []string) (string, error) {
 	slice, ok := fc.GetObject("slice " + SliceIdx)
 	if !ok {
 		return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
@@ -54,7 +60,7 @@ func get_level_preamp_att(_ *Conn, args []string) (string, error) {
 	}
 }
 
-func set_level_preamp_att(_ *Conn, args []string) (string, error) {
+func set_level_preamp_att(ctx context.Context, args []string) (string, error) {
 	level, err := strconv.ParseFloat(args[2], 64)
 	if err != nil {
 		return "", err

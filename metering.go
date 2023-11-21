@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -33,13 +34,16 @@ var hamlibToFlex = map[string]string{}
 var pktReader bytes.Reader
 
 func init() {
-	handler := NewHandler(get_level_metering,
-		AllArgs(true),
-		Args(2),
-	)
-
 	for meter := range meters {
-		hamlib.AddHandler(names{{`l`, meter}, {`\get_level`, meter}}, handler)
+		handler := NewHandler("get_level", "l",
+			get_level_metering,
+			RequiredArgs(meter),
+			AllArgs(true),
+			Args(2),
+			FieldNames("Level Value"),
+		)
+
+		hamlib.AddHandler(handler)
 	}
 }
 
@@ -188,7 +192,7 @@ func dBmToRFPower(dBm float64) float64 {
 	return dBmToWatts(dBm) / 100
 }
 
-func get_level_metering(_ *Conn, args []string) (string, error) {
+func get_level_metering(ctx context.Context, args []string) (string, error) {
 	level := args[1]
 	conv, ok := meters[level]
 	if !ok {
