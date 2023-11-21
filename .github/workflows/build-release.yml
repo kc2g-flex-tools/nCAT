@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.18', '1.19']
+        go: ['1.20', '1.21']
         os: ['linux', 'darwin']
         arch: ['amd64', 'arm', 'arm64']
         include:
-          - go: '1.19'
+          - go: '1.21'
             release: true
         exclude:
           - os: 'darwin'
