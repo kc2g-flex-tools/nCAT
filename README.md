@@ -43,6 +43,8 @@ If you would like to create a new "headless" session, independent of any GUI cli
 $ ./nCAT -headless
 ```
 
+Headless mode connects to the radio as a "GUI client", which means that it has its own slices and panadapters (even if you can't really see them), and counts towards the limit of 2 clients per radio.
+
 In either case, a hamlib net protocol (rigctld) server will start on TCP port 4532.
 
 ### Installation
