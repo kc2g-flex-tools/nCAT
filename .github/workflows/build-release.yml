@@ -55,7 +55,7 @@ jobs:
       if: github.event.release.id && matrix.release
       run: |
         SUFFIX=""
-        if [ "$GOOS" = "windows" ] ; then SUFFIX=.exe ; fi
+        if [ "${{matrix.os}}" = "windows" ] ; then SUFFIX=.exe ; fi
         curl -f -sSL -X POST \
         -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
         -H "Content-Type: application/octet-stream" \
