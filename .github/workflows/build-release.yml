@@ -16,14 +16,16 @@ jobs:
     strategy:
       matrix:
         go: ['1.20', '1.21']
-        os: ['linux', 'darwin']
-        arch: ['amd64', 'arm', 'arm64']
+        os: ['linux', 'darwin', 'windows']
+        arch: ['386', 'amd64', 'arm', 'arm64']
         include:
           - go: '1.21'
             release: true
         exclude:
           - os: 'darwin'
             arch: 'arm'
+          - os: 'darwin'
+            arch: '386'
     steps:
 
     - name: Set up Go
@@ -52,8 +54,10 @@ jobs:
     - name: Upload to Release
       if: github.event.release.id && matrix.release
       run: |
+        SUFFIX=""
+        if [ "$GOOS" = "windows" ] ; then SUFFIX=.exe ; fi
         curl -f -sSL -X POST \
         -H "Authorization: token ${{ secrets.GITHUB_TOKEN}}" \
         -H "Content-Type: application/octet-stream" \
-        --upload-file nCAT \
-        "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${{github.event.release.id}}/assets?name=nCAT-${{matrix.os}}-${{matrix.arch}}"
+        --upload-file nCAT$SUFFIX \
+        "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${{github.event.release.id}}/assets?name=nCAT-${{matrix.os}}-${{matrix.arch}}$SUFFIX"
