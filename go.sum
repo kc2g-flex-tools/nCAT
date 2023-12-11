@@ -3,8 +3,8 @@ github.com/eclipse/paho.mqtt.golang v1.2.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7j
 github.com/hb9fxq/flexlib-go v0.0.0-20201121202105-f704c45da456/go.mod h1:MI57yfZqrJ80yBJxa08A2K6lZg8ePT4Q+zfI2ifqDio=
 github.com/hb9fxq/flexlib-go v0.0.0-20201128184122-8acafd8a4e14 h1:FZkuXZqagN8FHctFqXyb+OBo0aRpQq1VXJgXzo8aGaM=
 github.com/hb9fxq/flexlib-go v0.0.0-20201128184122-8acafd8a4e14/go.mod h1:iB83MZ+GbY0Z/Cdf38tJPLF/OG9sPbLTtuknBuMOfQw=
-github.com/kc2g-flex-tools/flexclient v0.3.0 h1:kKLwGaS6/tzoVXGhIHbhA5ts9GBAQ9kIcl9zI296Glc=
-github.com/kc2g-flex-tools/flexclient v0.3.0/go.mod h1:xNkxFBry2vKlXtCess2Cpayri0kqeg9SATi4fs6WxBA=
+github.com/kc2g-flex-tools/flexclient v0.3.1 h1:V1iSjSiDWo5YmWZ6qVJ03Iw9/XlVm/r0/6T3X3LUNMA=
+github.com/kc2g-flex-tools/flexclient v0.3.1/go.mod h1:xNkxFBry2vKlXtCess2Cpayri0kqeg9SATi4fs6WxBA=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/rs/zerolog v1.18.0 h1:CbAm3kP2Tptby1i9sYy2MGRg0uxIN9cyDb59Ys7W8z8=
