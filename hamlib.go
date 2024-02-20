@@ -240,7 +240,7 @@ func (s *HamlibServer) handleCmd(ctx context.Context, conn *Conn, line string) b
 	log.Trace().Strs("cmd", parts).Msg("")
 	s.RLock()
 	defer s.RUnlock()
-	if cmd == "q" {
+	if cmd == "short:q" || cmd == "short:Q" {
 		return true
 	}
 
