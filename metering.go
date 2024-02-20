@@ -193,6 +193,10 @@ func dBmToRFPower(dBm float64) float64 {
 }
 
 func get_level_metering(ctx context.Context, args []string) (string, error) {
+	if !cfg.Metering {
+		return Error, nil
+	}
+
 	level := args[1]
 	conv, ok := meters[level]
 	if !ok {
