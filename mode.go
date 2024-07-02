@@ -116,7 +116,7 @@ func set_mode(ctx context.Context, args []string) (string, error) {
 	}
 
 	res := fc.SliceSet(SliceIdx, flexclient.Object{"mode": mode})
-	if res.Error != 0 {
+	if res.Error != 0 && res.Error != 0x50002001 {
 		return "", fmt.Errorf("slice set %08X", res.Error)
 	}
 
