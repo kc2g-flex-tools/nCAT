@@ -57,7 +57,7 @@ func createClient() {
 	ClientID = "0x" + fc.ClientID()
 
 	fc.SendAndWait("client program Hamlib-Flex")
-	fc.SendAndWait("client station " + cfg.Station)
+	fc.SendAndWait("client station " + strings.ReplaceAll(cfg.Station, " ", "\x7f"))
 
 	log.Info().Str("handle", ClientID).Msg("Got client handle")
 
