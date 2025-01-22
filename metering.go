@@ -149,10 +149,12 @@ func meterPacket(pkt flexclient.VitaPacket) {
 		name := fmt.Sprintf("meter %d", id)
 		hamlib, found := flexToHamlib[name]
 		if !found {
+			pktReader.Seek(2, io.SeekCurrent)
 			continue
 		}
 		meta, found := meterMeta[name]
 		if !found {
+			pktReader.Seek(2, io.SeekCurrent)
 			continue
 		}
 		err = binary.Read(&pktReader, binary.BigEndian, &rawVal)
