@@ -152,8 +152,8 @@ func (s *HamlibServer) Listen(listen string) error {
 func (s *HamlibServer) Run(ctx context.Context) {
 	go func() {
 		<-ctx.Done()
-		s.RLock()
-		defer s.RUnlock()
+		s.Lock()
+		defer s.Unlock()
 
 		s.listener.Close()
 		for _, client := range s.clients {
@@ -187,9 +187,10 @@ func (s *HamlibServer) handleClient(ctx context.Context, conn *Conn) {
 		}
 	}
 	s.Lock()
-	for i, cl := range s.clients {
-		if cl == conn {
+	for i := 0; i < len(s.clients); i++ {
+		if s.clients[i] == conn {
 			s.clients = append(s.clients[:i], s.clients[i+1:]...)
+			break
 		}
 	}
 	conn.Close()

@@ -30,7 +30,7 @@ var cfg struct {
 
 func init() {
 	flag.StringVar(&cfg.RadioIP, "radio", ":discover:", "radio IP address or discovery spec")
-	flag.IntVar(&cfg.UDPPort, "udp-port", 0, "udp port to listen for VITA packets (0: random free port")
+	flag.IntVar(&cfg.UDPPort, "udp-port", 0, "udp port to listen for VITA packets (0: random free port)")
 	flag.StringVar(&cfg.Station, "station", "Flex", "station name to bind to or create")
 	flag.StringVar(&cfg.Slice, "slice", "A", "slice letter to control")
 	flag.BoolVar(&cfg.Headless, "headless", false, "run in headless mode")
