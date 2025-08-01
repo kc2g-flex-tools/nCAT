@@ -67,7 +67,10 @@ func set_level_rfpower(ctx context.Context, args []string) (string, error) {
 		return "", err
 	}
 	power *= 100
-	res := fc.TransmitSet(flexclient.Object{"rfpower": fmt.Sprintf("%.0f", power)})
+	res, err := fc.TransmitSet(ctx, flexclient.Object{"rfpower": fmt.Sprintf("%.0f", power)})
+	if err != nil {
+		return "", err
+	}
 	if res.Error != 0 {
 		return "", fmt.Errorf("transmit set %08X", res.Error)
 	}
@@ -113,7 +116,10 @@ func set_level_rf(ctx context.Context, args []string) (string, error) {
 		obj["agc_threshold"] = val
 	}
 
-	res := fc.SliceSet(SliceIdx, obj)
+	res, err := fc.SliceSet(ctx, SliceIdx, obj)
+	if err != nil {
+		return "", err
+	}
 	if res.Error != 0 {
 		return "", fmt.Errorf("slice set %08X", res.Error)
 	}

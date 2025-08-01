@@ -55,7 +55,10 @@ func set_ptt(ctx context.Context, args []string) (string, error) {
 			return "", fmt.Errorf("couldn't get slice %s", SliceIdx)
 		}
 		if slice["tx"] != "1" {
-			res := fc.SliceSet(SliceIdx, flexclient.Object{"tx": "1"})
+			res, err := fc.SliceSet(ctx, SliceIdx, flexclient.Object{"tx": "1"})
+			if err != nil {
+				return "", err
+			}
 			if res.Error != 0 {
 				return "", fmt.Errorf("slice set %08X", res.Error)
 			}

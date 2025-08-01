@@ -106,7 +106,10 @@ func set_level_preamp_att(ctx context.Context, args []string) (string, error) {
 		obj["rfgain"] = fmt.Sprintf("%.0f", level)
 	}
 
-	res := fc.SliceSet(SliceIdx, obj)
+	res, err := fc.SliceSet(ctx, SliceIdx, obj)
+	if err != nil {
+		return "", err
+	}
 	if res.Error != 0 {
 		return "", fmt.Errorf("slice set %08X", res.Error)
 	}

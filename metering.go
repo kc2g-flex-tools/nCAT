@@ -47,7 +47,7 @@ func init() {
 	}
 }
 
-func enableMetering(fc *flexclient.FlexClient) {
+func enableMetering(ctx context.Context, fc *flexclient.FlexClient) {
 	if cfg.UDPPort != 0 {
 		fc.SetUDPPort(cfg.UDPPort)
 	}
@@ -61,14 +61,19 @@ func enableMetering(fc *flexclient.FlexClient) {
 	fc.SetVitaChan(meterPackets)
 
 	meterEvents := make(chan flexclient.StateUpdate)
-	fc.Subscribe(flexclient.Subscription{"meter ", meterEvents})
-	go handleMeters(fc, meterPackets, meterEvents)
-	fc.SendAndWait("sub meter all")
+	fc.Subscribe(flexclient.Subscription{Prefix: "meter ", Updates: meterEvents})
+	go handleMeters(ctx, fc, meterPackets, meterEvents)
+	if _, err := fc.SendAndWaitContext(ctx, "sub meter all"); err != nil {
+		log.Error().Err(err).Msg("Failed to subscribe to meter updates")
+	}
 }
 
-func handleMeters(fc *flexclient.FlexClient, meterPackets chan flexclient.VitaPacket, meterEvents chan flexclient.StateUpdate) {
+func handleMeters(ctx context.Context, fc *flexclient.FlexClient, meterPackets chan flexclient.VitaPacket, meterEvents chan flexclient.StateUpdate) {
 	for {
 		select {
+		case <-ctx.Done():
+			log.Info().Msg("handle_meters exiting on context cancellation")
+			return
 		case upd, ok := <-meterEvents:
 			if !ok {
 				log.Info().Msg("handle_meters exiting on update chan closed")

@@ -3,7 +3,7 @@ module github.com/kc2g-flex-tools/nCAT
 go 1.17
 
 require (
-	github.com/kc2g-flex-tools/flexclient v0.4.0
+	github.com/kc2g-flex-tools/flexclient v0.7.0
 	github.com/rs/zerolog v1.32.0
 )
 

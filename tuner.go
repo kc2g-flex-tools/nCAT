@@ -55,7 +55,9 @@ func set_func_tuner(ctx context.Context, args []string) (string, error) {
 		}
 
 		if xmit["tune"] != "0" {
-			if res := fc.TransmitTune("0"); res.Error != 0 {
+			if res, err := fc.TransmitTune(ctx, "0"); err != nil {
+				return err
+			} else if res.Error != 0 {
 				return fmt.Errorf("transmit tune %08X", res.Error)
 			}
 		}
@@ -94,7 +96,9 @@ func set_func_tuner(ctx context.Context, args []string) (string, error) {
 		}
 		return Success, nil
 	case "2":
-		if res := fc.TransmitTune("1"); res.Error != 0 {
+		if res, err := fc.TransmitTune(ctx, "1"); err != nil {
+			return "", err
+		} else if res.Error != 0 {
 			return "", fmt.Errorf("transmit tune %08X", res.Error)
 		}
 		return Success, nil

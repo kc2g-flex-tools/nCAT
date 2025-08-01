@@ -3,8 +3,8 @@ github.com/eclipse/paho.mqtt.golang v1.2.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7j
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/hb9fxq/flexlib-go v0.0.0-20201128184122-8acafd8a4e14 h1:FZkuXZqagN8FHctFqXyb+OBo0aRpQq1VXJgXzo8aGaM=
 github.com/hb9fxq/flexlib-go v0.0.0-20201128184122-8acafd8a4e14/go.mod h1:iB83MZ+GbY0Z/Cdf38tJPLF/OG9sPbLTtuknBuMOfQw=
-github.com/kc2g-flex-tools/flexclient v0.4.0 h1:qZuA4lsW4l9qba8TE6mfAizI3NZzd974JnKM2o3lhPk=
-github.com/kc2g-flex-tools/flexclient v0.4.0/go.mod h1:zVHZbwOlIhb9/C5U/ulQzDxnVzqyY7gAjnjHz1g4Sa4=
+github.com/kc2g-flex-tools/flexclient v0.7.0 h1:e+Df8Fudt4bjPuShzXzte9ERnxmwZrgufXsrmKepo+Q=
+github.com/kc2g-flex-tools/flexclient v0.7.0/go.mod h1:zVHZbwOlIhb9/C5U/ulQzDxnVzqyY7gAjnjHz1g4Sa4=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=

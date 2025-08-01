@@ -17,6 +17,9 @@ func init() {
 
 func send_cmd(ctx context.Context, args []string) (string, error) {
 	cmd := strings.Join(args, " ")
-	res := fc.SendAndWait(cmd)
+	res, err := fc.SendAndWaitContext(ctx, cmd)
+	if err != nil {
+		return "", err
+	}
 	return fmt.Sprintf("%08X %s\n", res.Error, res.Message), nil
 }

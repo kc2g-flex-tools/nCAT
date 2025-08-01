@@ -82,8 +82,10 @@ func set_freq(ctx context.Context, args []string) (string, error) {
 		return "", err
 	}
 
-	res := fc.SliceTune(SliceIdx, freq/1e6)
-
+	res, err := fc.SliceTune(ctx, SliceIdx, freq/1e6)
+	if err != nil {
+		return "", err
+	}
 	if res.Error != 0 {
 		return "", fmt.Errorf("slice tune %08X", res.Error)
 	}
@@ -133,7 +135,10 @@ func set_ritxit(which string) func(context.Context, []string) (string, error) {
 			obj[which+"_freq"] = fmt.Sprintf("%d", freq)
 		}
 
-		res := fc.SliceSet(SliceIdx, obj)
+		res, err := fc.SliceSet(ctx, SliceIdx, obj)
+		if err != nil {
+			return "", err
+		}
 		if res.Error != 0 {
 			return "", fmt.Errorf("slice set %08X", res.Error)
 		}

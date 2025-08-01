@@ -115,7 +115,10 @@ func set_mode(ctx context.Context, args []string) (string, error) {
 		return "", err
 	}
 
-	res := fc.SliceSet(SliceIdx, flexclient.Object{"mode": mode})
+	res, err := fc.SliceSet(ctx, SliceIdx, flexclient.Object{"mode": mode})
+	if err != nil {
+		return "", err
+	}
 	if res.Error != 0 && res.Error != 0x50002001 {
 		return "", fmt.Errorf("slice set %08X", res.Error)
 	}
@@ -129,7 +132,10 @@ func set_mode(ctx context.Context, args []string) (string, error) {
 		lo = centerFreq[mode] - width/2
 		hi = centerFreq[mode] + width/2
 
-		res := fc.SliceSetFilter(SliceIdx, lo, hi)
+		res, err := fc.SliceSetFilter(ctx, SliceIdx, lo, hi)
+		if err != nil {
+			return "", err
+		}
 		if res.Error != 0 {
 			return "", fmt.Errorf("set filter %08X", res.Error)
 		}

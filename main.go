@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/kc2g-flex-tools/flexclient"
 	"github.com/rs/zerolog"
@@ -47,41 +48,56 @@ var ClientID string
 var ClientUUID string
 var SliceIdx string
 
-func createClient() {
+func createClient(ctx context.Context) error {
 	log.Info().Msg("Registering client")
-	res := fc.SendAndWait("client gui")
+	res, err := fc.SendAndWaitContext(ctx, "client gui")
+	if err != nil {
+		return err
+	}
 	if res.Error != 0 {
-		panic(res)
+		return fmt.Errorf("client gui failed: %08X", res.Error)
 	}
 	ClientUUID = res.Message
 	ClientID = "0x" + fc.ClientID()
 
-	fc.SendAndWait("client program Hamlib-Flex")
-	fc.SendAndWait("client station " + strings.ReplaceAll(cfg.Station, " ", "\x7f"))
+	if _, err := fc.SendAndWaitContext(ctx, "client program Hamlib-Flex"); err != nil {
+		return err
+	}
+	if _, err := fc.SendAndWaitContext(ctx, "client station " + strings.ReplaceAll(cfg.Station, " ", "\x7f")); err != nil {
+		return err
+	}
 
 	log.Info().Str("handle", ClientID).Msg("Got client handle")
 
 	if cfg.Profile != "" {
-		res := fc.SendAndWait("profile global load " + cfg.Profile)
+		res, err := fc.SendAndWaitContext(ctx, "profile global load " + cfg.Profile)
+		if err != nil {
+			return err
+		}
 		if res.Error != 0 {
 			log.Printf("Profile load failed: %08X (typo?)", res.Error)
 		} else {
 			log.Printf("Loaded profile %s", cfg.Profile)
 		}
 	}
+	return nil
 }
 
-func bindClient() {
+func bindClient(ctx context.Context) error {
 	log.Info().Str("station", cfg.Station).Msg("Waiting for station")
 
 	clients := make(chan flexclient.StateUpdate)
-	sub := fc.Subscribe(flexclient.Subscription{"client ", clients})
+	sub := fc.Subscribe(flexclient.Subscription{Prefix: "client ", Updates: clients})
 	cmdResult := fc.SendNotify("sub client all")
 
 	var found, cmdComplete bool
 
 	for !found || !cmdComplete {
 		select {
+		case <-ctx.Done():
+			cmdResult.Close()
+			fc.Unsubscribe(sub)
+			return ctx.Err()
 		case upd := <-clients:
 			if upd.CurrentState["station"] == cfg.Station {
 				ClientID = strings.TrimPrefix(upd.Object, "client ")
@@ -98,19 +114,26 @@ func bindClient() {
 
 	log.Info().Str("client_id", ClientID).Str("uuid", ClientUUID).Msg("Found client")
 
-	fc.SendAndWait("client bind client_id=" + ClientUUID)
+	if _, err := fc.SendAndWaitContext(ctx, "client bind client_id=" + ClientUUID); err != nil {
+		return err
+	}
+	return nil
 }
 
-func findSlice() {
+func findSlice(ctx context.Context) error {
 	log.Info().Str("slice_id", cfg.Slice).Msg("Looking for slice")
 	slices := make(chan flexclient.StateUpdate)
-	sub := fc.Subscribe(flexclient.Subscription{"slice ", slices})
+	sub := fc.Subscribe(flexclient.Subscription{Prefix: "slice ", Updates: slices})
 	cmdResult := fc.SendNotify("sub slice all")
 
 	var found, cmdComplete bool
 
 	for !found || !cmdComplete {
 		select {
+		case <-ctx.Done():
+			cmdResult.Close()
+			fc.Unsubscribe(sub)
+			return ctx.Err()
 		case upd := <-slices:
 			if upd.CurrentState["index_letter"] == cfg.Slice && upd.CurrentState["client_handle"] == ClientID {
 				SliceIdx = strings.TrimPrefix(upd.Object, "slice ")
@@ -123,6 +146,7 @@ func findSlice() {
 	cmdResult.Close()
 	fc.Unsubscribe(sub)
 	log.Info().Str("slice_idx", SliceIdx).Msg("Found slice")
+	return nil
 }
 
 func main() {
@@ -147,55 +171,90 @@ func main() {
 
 	fc, err = flexclient.NewFlexClient(cfg.RadioIP)
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err).Msg("Failed to create FlexClient")
 	}
+
+	// Create root context that can be canceled
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Set up signal handling
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	var wg sync.WaitGroup
+
+	// Run flexclient
 	wg.Add(1)
-
-	hamlibCtx, cancel := context.WithCancelCause(context.Background())
-
 	go func() {
+		defer wg.Done()
 		fc.Run()
-		cancel(errors.New("flexclient exited"))
-		wg.Done()
+		log.Info().Msg("FlexClient exited")
+		cancel()
 	}()
 
+	// Handle signals
+	go func() {
+		select {
+		case sig := <-sigChan:
+			log.Info().Str("signal", sig.String()).Msg("Received signal, shutting down")
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
+	// Set up hamlib server
 	err = hamlib.Listen(cfg.Listen)
 	if err != nil {
-		panic(err)
+		log.Fatal().Err(err).Msg("Failed to start hamlib server")
 	}
 
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
-		<-c
-		log.Info().Msg("Exit on SIGINT")
-		fc.Close()
-		cancel(errors.New("trapped SIGINT"))
-	}()
-
+	// Initialize client and slice
 	if cfg.Headless {
-		createClient()
+		if err := createClient(ctx); err != nil {
+			log.Fatal().Err(err).Msg("Failed to create client")
+		}
 	} else {
-		bindClient()
+		if err := bindClient(ctx); err != nil {
+			log.Fatal().Err(err).Msg("Failed to bind client")
+		}
 	}
-	findSlice()
 
-	fc.SendAndWait("sub radio all")
-	fc.SendAndWait("sub tx all")
-	fc.SendAndWait("sub atu all")
+	if err := findSlice(ctx); err != nil {
+		log.Fatal().Err(err).Msg("Failed to find slice")
+	}
+
+	// Subscribe to updates
+	if _, err := fc.SendAndWaitContext(ctx, "sub radio all"); err != nil {
+		log.Error().Err(err).Msg("Failed to subscribe to radio updates")
+	}
+	if _, err := fc.SendAndWaitContext(ctx, "sub tx all"); err != nil {
+		log.Error().Err(err).Msg("Failed to subscribe to tx updates")
+	}
+	if _, err := fc.SendAndWaitContext(ctx, "sub atu all"); err != nil {
+		log.Error().Err(err).Msg("Failed to subscribe to atu updates")
+	}
 
 	if cfg.Metering {
-		enableMetering(fc)
+		enableMetering(ctx, fc)
 	}
 
+	// Run hamlib server
 	wg.Add(1)
 	go func() {
-		hamlib.Run(hamlibCtx)
-		fc.Close()
-		wg.Done()
+		defer wg.Done()
+		hamlib.Run(ctx)
+		log.Info().Msg("Hamlib server exited")
 	}()
 
+	// Wait for context cancellation
+	<-ctx.Done()
+	log.Info().Msg("Shutting down...")
+
+	// Close flexclient to trigger shutdown
+	fc.Close()
+
+	// Wait for all goroutines to finish
 	wg.Wait()
+	log.Info().Msg("Shutdown complete")
 }

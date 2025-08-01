@@ -51,7 +51,10 @@ func set_level_af(ctx context.Context, args []string) (string, error) {
 	audio_level *= 100
 
 	val := fmt.Sprintf("%.0f", audio_level)
-	res := fc.SliceSet(SliceIdx, flexclient.Object{"audio_level": val})
+	res, err := fc.SliceSet(ctx, SliceIdx, flexclient.Object{"audio_level": val})
+	if err != nil {
+		return "", err
+	}
 	if res.Error != 0 {
 		return "", fmt.Errorf("slice set %08X", res.Error)
 	}
