@@ -39,7 +39,7 @@ func init() {
 	flag.StringVar(&cfg.Profile, "profile", "", "global profile to load on startup for -headless mode")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "minimum level of messages to log to console")
 	flag.StringVar(&cfg.ChkVFOMode, "chkvfo-mode", "new", "chkvfo syntax (old,new)")
-	flag.BoolVar(&cfg.Metering, "metering", false, "support reading meters from radio")
+	flag.BoolVar(&cfg.Metering, "metering", true, "support reading meters from radio")
 }
 
 var fc *flexclient.FlexClient
