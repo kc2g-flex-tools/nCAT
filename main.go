@@ -63,14 +63,14 @@ func createClient(ctx context.Context) error {
 	if _, err := fc.SendAndWaitContext(ctx, "client program Hamlib-Flex"); err != nil {
 		return err
 	}
-	if _, err := fc.SendAndWaitContext(ctx, "client station " + strings.ReplaceAll(cfg.Station, " ", "\x7f")); err != nil {
+	if _, err := fc.SendAndWaitContext(ctx, "client station "+strings.ReplaceAll(cfg.Station, " ", "\x7f")); err != nil {
 		return err
 	}
 
 	log.Info().Str("handle", ClientID).Msg("Got client handle")
 
 	if cfg.Profile != "" {
-		res, err := fc.SendAndWaitContext(ctx, "profile global load " + cfg.Profile)
+		res, err := fc.SendAndWaitContext(ctx, "profile global load "+cfg.Profile)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func bindClient(ctx context.Context) error {
 
 	log.Info().Str("client_id", ClientID).Str("uuid", ClientUUID).Msg("Found client")
 
-	if _, err := fc.SendAndWaitContext(ctx, "client bind client_id=" + ClientUUID); err != nil {
+	if _, err := fc.SendAndWaitContext(ctx, "client bind client_id="+ClientUUID); err != nil {
 		return err
 	}
 	return nil
